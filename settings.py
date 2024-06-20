@@ -34,6 +34,11 @@ BULLET_DAMAGE = 10
 # Enemy settings
 
 shape_data = {
-    "circle": {"health": 100, "attack_damage": 20, "speed": 5, "sides": 1, "colour": (0, 0, 255), "radius": 10},
-    "triangle": {"health": 200, "attack_damage": 30, "speed": 5, "sides": 3, "colour": (0, 125, 125), "radius": 10},
+    "circle": {"health": 100, "attack_damage": 10, "speed": 5, "sides": 1, "colour": (0, 200, 255), "radius": 15},
+    "triangle": {"health": 300, "attack_damage": 30, "speed": 5, "sides": 3, "colour": (255, 255, 0), "radius": 30},
+    "square": {"health": 400, "attack_damage": 40, "speed": 5, "sides": 4, "colour": (255, 51, 242), "radius": 30},
+    "pentagon": {"health": 500, "attack_damage": 50, "speed": 5, "sides": 5, "colour": (0, 0, 10), "radius": 20},
+    "hexagon": {"health": 600, "attack_damage": 60, "speed": 5, "sides": 6, "colour": (0, 100, 0), "radius": 20},
+    "septagon": {"health": 700, "attack_damage": 70, "speed": 5, "sides": 7, "colour": (0, 0, 100), "radius": 20},
+    "octagon": {"health": 800, "attack_damage": 80, "speed": 5, "sides": 8, "colour": (255, 0, 0), "radius": 20},
 }

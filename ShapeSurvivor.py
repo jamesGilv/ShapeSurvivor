@@ -24,17 +24,19 @@ background = pygame.Rect(0, 0, WIDTH, HEIGHT)
 game_active = True
 current_time = 0
 start_time = 0
+enemy_timer = pygame.USEREVENT + 1
+pygame.time.set_timer(enemy_timer, 1000)
 
 
 # Classes
 class Shape(pygame.sprite.Sprite):
-    def __init__(self, name, start_x, start_y):
+    def __init__(self):
         super().__init__(all_sprites_group, enemy_group)
         self.alive = True
-        self.position = Vector2(start_x, start_y)
-        self.x_pos = self.position.x
-        self.y_pos = self.position.y
-        self.name = name
+        self.x_pos = random.randint(-100, WIDTH + 100)
+        self.y_pos = random.randint(-100, HEIGHT + 100)
+        self.position = Vector2(self.x_pos, self.y_pos)
+        self.name = random.choice(["circle", "triangle", "square", "pentagon", "hexagon", "septagon", "octagon"])
 
         self.velocity = Vector2()
         self.direction = Vector2()
@@ -48,12 +50,10 @@ class Shape(pygame.sprite.Sprite):
         self.colour = enemy_info["colour"]
         self.radius = enemy_info["radius"]
 
-        # self.hitbox_rect = draw_shape(self.colour, self.sides, 0, self.x_pos, self.y_pos, self.radius)
-
     def check_alive(self):
         if self.health <= 0:
             self.alive = False
-
+                    
     def get_vector_distance(self, vector_1, vector_2):
         return (vector_1 - vector_2).magnitude()
 
@@ -81,7 +81,10 @@ class Shape(pygame.sprite.Sprite):
         # self.check_collision("vertical", "hunt")
 
         # self.position = (self.hitbox_rect.centerx, self.hitbox_rect.centery)
-        draw_shape(self.colour, self.sides, 0, new_x, new_y, 50)
+        if self.name == "circle":
+            pygame.draw.circle(screen, self.colour, (new_x, new_y), self.radius)
+        else:
+            draw_shape(self.colour, self.sides, 0, new_x, new_y, self.radius)
 
     def update(self):
         self.move_shape()
@@ -105,12 +108,6 @@ def draw_shape(colour, num_sides, tilt_angle, x, y, radius):
     pygame.draw.polygon(screen, colour, pts)
 
 
-Triangle = Shape("triangle", 10, 10)
-# all_sprites_group.add(Triangle)
-# draw_shape((0, 0, 255), 3, 0, 500, 500, 100)
-# Triangle_rect = pygame.Rect(500, 500, Triangle.width, Triangle.height)
-x = 500
-y = 500
 while True:
     current_time = pygame.time.get_ticks()
 
@@ -119,12 +116,11 @@ while True:
         if event.type == pygame.QUIT:
             pygame.quit()
             exit()
+        if event.type == enemy_timer:
+            Shape()
 
     pygame.draw.rect(screen, (60, 255, 60), background)
     all_sprites_group.update()
-    # draw_shape((0, 0, 255), 3, 0, x, y, 100)
-    # x += 1
-    # y -= 1
 
     pygame.display.update()
     clock.tick(FPS)
