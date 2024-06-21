@@ -16,6 +16,7 @@ clock = pygame.time.Clock()
 # Fonts
 font = pygame.font.Font('Font/GummyBear.ttf', 60)
 small_font = pygame.font.Font('Font/GummyBear.ttf', 40)
+level_font = pygame.font.Font('Font/bakemono_stereo/Bakemono-Stereo-Regular-trial.ttf', 40)
 
 # Images
 background = pygame.Rect(0, 0, WIDTH, HEIGHT)
@@ -29,6 +30,8 @@ bullet_img = pygame.transform.rotozoom(bullet_img, 0, BULLET_SCALE)
 
 # Game variables
 game_active = True
+ready_to_spawn = True
+upgrade_select = False
 current_time = 0
 start_time = 0
 enemy_timer = pygame.USEREVENT + 1
@@ -50,10 +53,14 @@ class Player(pygame.sprite.Sprite):
         self.player_speed = PLAYER_SPEED
         self.shoot = False
         self.shoot_cooldown = 0
+        self.fire_delay = SHOOT_COOLDOWN
 
         self.health = PLAYER_HEALTH
 
         self.gun_barrel_offset = pygame.math.Vector2(45, 20)
+
+        self.damage = BULLET_DAMAGE
+        self.experience = 0
 
     def player_turning(self):
         self.mouse_coords = pygame.mouse.get_pos()
@@ -87,7 +94,6 @@ class Player(pygame.sprite.Sprite):
         if pygame.mouse.get_pressed() == (1, 0, 0) or keys[pygame.K_SPACE]:
             self.shoot = True
             self.is_shooting()
-
         else:
             self.shoot = False
 
@@ -100,7 +106,7 @@ class Player(pygame.sprite.Sprite):
             # gun_shot_sound.play()
             spawn_bullet_pos = self.vec_pos + self.gun_barrel_offset.rotate(self.angle)
             self.bullet = Bullet(spawn_bullet_pos[0], spawn_bullet_pos[1], self.angle)
-            self.shoot_cooldown = 10
+            self.shoot_cooldown = self.fire_delay
             bullet_group.add(self.bullet)
             all_sprites_group.add(self.bullet)
 
@@ -118,10 +124,15 @@ class Player(pygame.sprite.Sprite):
     def get_damage(self, amount):
         self.health -= amount
 
+    def check_level(self):
+        if self.experience >= 100:
+            level_up()
+
     def update(self):
         self.player_turning()
         self.player_input()
         self.move()
+        self.check_level()
 
         if self.shoot_cooldown > 0: # Just shot a bullet
             self.shoot_cooldown -= 1
@@ -158,7 +169,7 @@ class Bullet(pygame.sprite.Sprite):
         hits = pygame.sprite.groupcollide(enemy_group, bullet_group, False, True, hitbox_collide)
 
         for hit in hits:
-            hit.health -= BULLET_DAMAGE
+            hit.health -= player.damage
 
     def update(self):
         self.bullet_movement()
@@ -185,6 +196,7 @@ class Shape(pygame.sprite.Sprite):
         self.sides = enemy_info["sides"]
         self.colour = enemy_info["colour"]
         self.radius = enemy_info["radius"]
+        self.exp = enemy_info["exp"]
 
         self.rect = pygame.Rect(self.x_pos, self.y_pos, self.radius, self.radius)
         self.rect.center = self.position
@@ -194,6 +206,7 @@ class Shape(pygame.sprite.Sprite):
     def check_alive(self):
         if self.health <= 0:
             self.alive = False
+            player.experience += self.exp
             self.kill()
 
     def check_collision(self, direction):
@@ -275,6 +288,18 @@ def draw_shape(colour, num_sides, tilt_angle, x, y, radius):
 
     pygame.draw.polygon(screen, colour, pts)
 
+def level_up():
+    global upgrade_select
+    upgrade_select = True
+    global ready_to_spawn
+    ready_to_spawn = False
+    screen.fill((0, 100, 200))
+
+    level_text = level_font.render("Level up, select upgrade", True, WHITE)
+    upgrade_text = level_font.render("For damage: d. For health: h. For speed: s. For firerate: f", True, WHITE)
+
+    screen.blit(level_text, ((WIDTH - level_text.get_width())/2, HEIGHT/2 - 100))
+    screen.blit(upgrade_text, ((WIDTH - upgrade_text.get_width())/2, HEIGHT/2 + 100))
 
 def display_end_screen():
     screen.fill((40, 40, 40))
@@ -282,8 +307,8 @@ def display_end_screen():
     game_over_surface = font.render("GAME OVER", True, WHITE)
     text_surface = small_font.render("Press space to play again", True, WHITE)
 
-    screen.blit(game_over_surface, (WIDTH/2 - game_over_surface.get_width()/2, HEIGHT/2 - 100))
-    screen.blit(text_surface, (WIDTH/2 - text_surface.get_width()/2, HEIGHT/2 + 100))
+    screen.blit(game_over_surface, ((WIDTH - game_over_surface.get_width())/2, HEIGHT/2 - 100))
+    screen.blit(text_surface, ((WIDTH - text_surface.get_width())/2, HEIGHT/2 + 100))
 
 def end_game():
     global game_active
@@ -314,15 +339,34 @@ while True:
             game_active = True
             start_time = pygame.time.get_ticks()
         if game_active:
+            if not ready_to_spawn: # level up screen
+                if keys[pygame.K_d]:
+                    player.damage += 10
+                    ready_to_spawn = True
+                    player.experience = 0
+                if keys[pygame.K_h]:
+                    player.health += 20
+                    ready_to_spawn = True
+                    player.experience = 0
+                if keys[pygame.K_s]:
+                    player.player_speed += 1
+                    ready_to_spawn = True
+                    player.experience = 0
+                if keys[pygame.K_f]:
+                    player.fire_delay -= 1
+                    ready_to_spawn = True
+                    player.experience = 0
+
             if event.type == enemy_timer:
                 Shape()
 
     if game_active:
-        pygame.draw.rect(screen, (0, 100, 0), background)
-        all_sprites_group.update()
-        screen.blit(player.image, player.rect)
-        for bullet in bullet_group:
-            screen.blit(bullet_img, bullet.rect)
+        if ready_to_spawn:
+            pygame.draw.rect(screen, (0, 100, 0), background)
+            all_sprites_group.update()
+            screen.blit(player.image, player.rect)
+            for bullet in bullet_group:
+                screen.blit(bullet_img, bullet.rect)
     else:
         end_game()
         display_end_screen()
