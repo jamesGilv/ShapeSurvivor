@@ -14,6 +14,8 @@ clock = pygame.time.Clock()
 
 
 # Fonts
+font = pygame.font.Font('Font/GummyBear.ttf', 60)
+small_font = pygame.font.Font('Font/GummyBear.ttf', 40)
 
 # Images
 background = pygame.Rect(0, 0, WIDTH, HEIGHT)
@@ -276,6 +278,12 @@ def draw_shape(colour, num_sides, tilt_angle, x, y, radius):
 
 def display_end_screen():
     screen.fill((40, 40, 40))
+    draw_shape((255, 0, 0), 8, 0, WIDTH/2 - 25, HEIGHT/2 - 25, 50)
+    game_over_surface = font.render("GAME OVER", True, WHITE)
+    text_surface = small_font.render("Press space to play again", True, WHITE)
+
+    screen.blit(game_over_surface, (WIDTH/2 - game_over_surface.get_width()/2, HEIGHT/2 - 100))
+    screen.blit(text_surface, (WIDTH/2 - text_surface.get_width()/2, HEIGHT/2 + 100))
 
 def end_game():
     global game_active
