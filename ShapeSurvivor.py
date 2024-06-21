@@ -113,6 +113,9 @@ class Player(pygame.sprite.Sprite):
 
         self.vec_pos = (self.base_player_rect.centerx, self.base_player_rect.centery)
 
+    def get_damage(self, amount):
+        self.health -= amount
+
     def update(self):
         self.player_turning()
         self.player_input()
@@ -149,9 +152,15 @@ class Bullet(pygame.sprite.Sprite):
         if pygame.time.get_ticks() - self.spawn_time > self.bullet_lifetime:
             self.kill()
 
+    def bullet_collisions(self):
+        hits = pygame.sprite.groupcollide(enemy_group, bullet_group, False, True, hitbox_collide)
+
+        for hit in hits:
+            hit.health -= BULLET_DAMAGE
+
     def update(self):
         self.bullet_movement()
-        # self.bullet_collisions()
+        self.bullet_collisions()
 
 
 class Shape(pygame.sprite.Sprite):
@@ -175,32 +184,36 @@ class Shape(pygame.sprite.Sprite):
         self.colour = enemy_info["colour"]
         self.radius = enemy_info["radius"]
 
-        self.hitbox_rect = pygame.Rect(self.x_pos, self.y_pos, self.radius, self.radius)
-        self.hitbox_rect.center = self.position
+        self.rect = pygame.Rect(self.x_pos, self.y_pos, self.radius, self.radius)
+        self.rect.center = self.position
 
         self.collide = False
 
     def check_alive(self):
         if self.health <= 0:
             self.alive = False
+            self.kill()
 
     def check_collision(self, direction):
         for sprite in enemy_group:
-            if sprite.hitbox_rect != self.hitbox_rect:
-                if self.get_vector_distance(Vector2(self.hitbox_rect.center), Vector2(sprite.hitbox_rect.center)) < self.radius:
+            if sprite.hitbox_rect != self.rect:
+                if self.get_vector_distance(self.position, sprite.position) < self.radius:
                     # print('collide')
                     self.collide = True
                     if direction == "horizontal":
                         if self.velocity.x > 0:
-                            self.hitbox_rect.right = sprite.hitbox_rect.left
+                            self.rect.centerx -= self.radius/2
+                            sprite.rect.centerx += self.radius/2
                         if self.velocity.x < 0:
-                            self.hitbox_rect.left = sprite.hitbox_rect.right
+                            self.rect.centerx += self.radius/2
+                            sprite.rect.centerx -= self.radius/2
                     if direction == "vertical":
                         if self.velocity.y < 0:
-                            self.hitbox_rect.top = sprite.hitbox_rect.bottom
+                            self.rect.centery -= self.radius/2
+                            sprite.rect.centery += self.radius/2
                         if self.velocity.y > 0:
-                            self.hitbox_rect.bottom = sprite.hitbox_rect.top
-
+                            self.rect.centery += self.radius / 2
+                            sprite.rect.centery= self.radius / 2
     def get_vector_distance(self, vector_1, vector_2):
         return (vector_1 - vector_2).magnitude()
 
@@ -209,7 +222,7 @@ class Shape(pygame.sprite.Sprite):
         target_vec_x = target_vector[0]
         target_vec_y = target_vector[1]
         target_vector = Vector2(target_vec_x, target_vec_y)
-        enemy_vector = Vector2(self.hitbox_rect.center)
+        enemy_vector = Vector2(self.rect.center)
         distance = self.get_vector_distance(target_vector, enemy_vector)
 
         if distance > 0:
@@ -222,18 +235,23 @@ class Shape(pygame.sprite.Sprite):
         new_x = self.position.x
         new_y = self.position.y
 
-        self.hitbox_rect.centerx = new_x
-        self.hitbox_rect.centery = new_y
+        self.rect.centerx = new_x
+        self.rect.centery = new_y
 
-        # self.check_collision("horizontal")
-        # self.check_collision("vertical")
+    def check_player_collision(self):
+        if pygame.Rect.colliderect(self.rect, player.base_player_rect): # player and enemy collides
+            self.kill()
+            player.get_damage(self.attack_damage)
 
     def update(self):
-        self.move_shape()
-        if self.name == "circle":
-            pygame.draw.circle(screen, self.colour, (self.hitbox_rect.x, self.hitbox_rect.y), self.radius)
-        else:
-            draw_shape(self.colour, self.sides, 0, self.hitbox_rect.x, self.hitbox_rect.y, self.radius)
+        if self.alive:
+            self.check_alive()
+            self.move_shape()
+            self.check_player_collision()
+            if self.name == "circle":
+                pygame.draw.circle(screen, self.colour, (self.rect.x, self.rect.y), self.radius)
+            else:
+                draw_shape(self.colour, self.sides, 0, self.rect.x, self.rect.y, self.radius)
 
 
 # Groups
@@ -243,6 +261,8 @@ bullet_group = pygame.sprite.Group()
 enemy_group = pygame.sprite.Group()
 items_group = pygame.sprite.Group()
 
+def hitbox_collide(sprite1, sprite2):
+    return sprite1.rect.colliderect(sprite2.rect)
 
 def draw_shape(colour, num_sides, tilt_angle, x, y, radius):
     pts = []
@@ -254,25 +274,50 @@ def draw_shape(colour, num_sides, tilt_angle, x, y, radius):
     pygame.draw.polygon(screen, colour, pts)
 
 
+def display_end_screen():
+    screen.fill((40, 40, 40))
+
+def end_game():
+    global game_active
+    game_active = False
+    for item in items_group:
+        item.kill()
+    for enemy in enemy_group:
+        enemy.kill()
+    enemy_group.empty()
+    items_group.empty()
+
 player = Player((PLAYER_START_X, PLAYER_START_Y))
 # Shape()
 # Shape()
 
 while True:
     current_time = pygame.time.get_ticks()
+    if player.health <= 0:
+        end_game()
 
     keys = pygame.key.get_pressed()
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
             exit()
-        if event.type == enemy_timer:
-            Shape()
+        if not game_active and keys[pygame.K_SPACE]:
+            player.health = 100
+            game_active = True
+            start_time = pygame.time.get_ticks()
+        if game_active:
+            if event.type == enemy_timer:
+                Shape()
 
-    pygame.draw.rect(screen, (0, 100, 0), background)
-    all_sprites_group.update()
-    screen.blit(player.image, player.rect)
-    for bullet in bullet_group:
-        screen.blit(bullet_img, bullet.rect)
+    if game_active:
+        pygame.draw.rect(screen, (0, 100, 0), background)
+        all_sprites_group.update()
+        screen.blit(player.image, player.rect)
+        for bullet in bullet_group:
+            screen.blit(bullet_img, bullet.rect)
+    else:
+        end_game()
+        display_end_screen()
+
     pygame.display.update()
     clock.tick(FPS)
