@@ -48,7 +48,7 @@ class Game():
         self.shape_data = shape_data
 
         self.enemy_timer = pygame.USEREVENT + 1
-        self.game_scale = 40
+        self.game_scale = 2
         pygame.time.set_timer(self.enemy_timer, int(2000 / self.game_scale))
 
     def game_loop(self):

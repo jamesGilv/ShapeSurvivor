@@ -39,7 +39,7 @@ class Shape(pygame.sprite.Sprite):
     def check_alive(self):
         if self.health <= 0:
             self.alive = False
-            self.game.player.experience += self.exp
+            self.game.player.experience += self.exp * self.game.player.level_scale
             self.kill()
 
     def check_collision(self, direction):

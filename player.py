@@ -29,9 +29,11 @@ class Player(pygame.sprite.Sprite):
         self.gun_barrel_offset = pygame.math.Vector2(45, 20)
 
         self.damage = BULLET_DAMAGE
+        self.bullet_scale = 1
         self.experience = 0
         self.level = 0
         self.exp_cap = 100
+        self.level_scale = 1
 
     def player_turning(self):
         self.mouse_coords = pygame.mouse.get_pos()
@@ -123,6 +125,14 @@ class Player(pygame.sprite.Sprite):
             self.fire_delay -= 1
         else:
             self.fire_delay = 1
+        self.give_level()
+
+    def bigger_bullet(self):
+        self.bullet_scale += 0.5
+        self.give_level()
+
+    def add_exp_scale(self):
+        self.level_scale += 0.5
         self.give_level()
 
     def give_level(self):

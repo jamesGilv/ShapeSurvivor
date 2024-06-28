@@ -78,20 +78,26 @@ class LevelMenu(Menu):
     def __init__(self, game):
         Menu.__init__(self, game)
         self.state = 'Damage'
-        self.damagex, self.damagey = self.game.DISPLAY_W / 2, self.game.DISPLAY_H / 5
-        self.damage_rect = pygame.Rect(0, 0, 200, 40)
-        self.damage_rect.center = (self.damagex, self.damagey)
-        self.healthx, self.healthy = self.game.DISPLAY_W / 2, self.game.DISPLAY_H * 2 / 5
-        self.health_rect = pygame.Rect(0, 0, 200, 40)
-        self.health_rect.center = (self.healthx, self.healthy)
-        self.speedx, self.speedy = self.game.DISPLAY_W / 2, self.game.DISPLAY_H * 3 / 5
-        self.speed_rect = pygame.Rect(0, 0, 200, 40)
-        self.speed_rect.center = (self.speedx, self.speedy)
-        self.firex, self.firey = self.game.DISPLAY_W / 2, self.game.DISPLAY_H * 4 / 5
-        self.fire_rect = pygame.Rect(0, 0, 200, 40)
-        self.fire_rect.center = (self.firex, self.firey)
+        self.levelx, self.levely = self.game.DISPLAY_W / 2, self.game.DISPLAY_H / 5
+        self.damagex, self.damagey = self.game.DISPLAY_W / 3, self.game.DISPLAY_H * 3 / 8
+        self.damage_rect = self.text_rect(self.damagex, self.damagey)
+        self.healthx, self.healthy = self.game.DISPLAY_W / 3, self.game.DISPLAY_H * 5 / 8
+        self.health_rect = self.text_rect(self.healthx, self.healthy)
+        self.speedx, self.speedy = self.game.DISPLAY_W / 3, self.game.DISPLAY_H * 7 / 8
+        self.speed_rect = self.text_rect(self.speedx, self.speedy)
+        self.firex, self.firey = self.game.DISPLAY_W * 2 / 3, self.game.DISPLAY_H * 3 / 8
+        self.fire_rect = self.text_rect(self.firex, self.firey)
+        self.scalex, self.scaley = self.game.DISPLAY_W * 2 / 3, self.game.DISPLAY_H * 5 / 8
+        self.scale_rect = self.text_rect(self.scalex, self.scaley)
+        self.expx, self.expy = self.game.DISPLAY_W * 2 / 3, self.game.DISPLAY_H * 7 / 8
+        self.exp_rect = self.text_rect(self.expx, self.expy)
         self.offset = -100
         self.cursor_rect.midtop = (self.damagex + self.offset, self.damagey)
+
+    def text_rect(self, x, y):
+        rect = pygame.Rect(0, 0, 200, 40)
+        rect.center = (x, y)
+        return rect
 
     def display_menu(self):
         self.run_display = True
@@ -99,10 +105,13 @@ class LevelMenu(Menu):
             self.game.check_events()
             self.check_input()
             self.game.display.fill((40, 40, 100))
+            self.game.draw_text("Select upgrade, space to confirm", 50, self.levelx, self.levely)
             self.game.draw_text("Damage", 40, self.damagex, self.damagey)
             self.game.draw_text("Health", 40, self.healthx, self.healthy)
             self.game.draw_text("Speed", 40, self.speedx, self.speedy)
             self.game.draw_text("Fire rate", 40, self.firex, self.firey)
+            self.game.draw_text("Bullet size", 40, self.scalex, self.scaley)
+            self.game.draw_text("Exp scale", 40, self.expx, self.expy)
             self.draw_cursor()
             self.blit_screen()
 
@@ -120,6 +129,13 @@ class LevelMenu(Menu):
         if self.fire_rect.collidepoint(current_pos[0], current_pos[1]):
             self.cursor_rect.midtop = (self.firex + self.offset, self.firey)
             self.state = 'Fire'
+        if self.scale_rect.collidepoint(current_pos[0], current_pos[1]):
+            self.cursor_rect.midtop = (self.scalex + self.offset - 20, self.scaley)
+            self.state = 'Scale'
+        if self.exp_rect.collidepoint(current_pos[0], current_pos[1]):
+            self.cursor_rect.midtop = (self.expx + self.offset, self.expy)
+            self.state = 'Exp'
+
 
     def move_cursor(self):
         if self.game.DOWN_KEY:
@@ -152,7 +168,7 @@ class LevelMenu(Menu):
     def check_input(self):
         if pygame.MOUSEMOTION:
             self.check_mouse()
-        self.move_cursor()
+        # self.move_cursor()
         if self.game.START_KEY or self.game.SPACE_KEY:
             if self.state == 'Damage':
                 self.game.player.add_damage()
@@ -165,6 +181,12 @@ class LevelMenu(Menu):
                 self.game.playing = True
             elif self.state == 'Fire':
                 self.game.player.add_fire()
+                self.game.playing = True
+            elif self.state == 'Scale':
+                self.game.player.bigger_bullet()
+                self.game.playing = True
+            elif self.state == 'Exp':
+                self.game.player.add_exp_scale()
                 self.game.playing = True
         self.game.ready_to_spawn = True
         self.run_display = False

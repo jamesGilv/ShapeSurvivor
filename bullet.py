@@ -1,4 +1,7 @@
 import math
+
+import pygame.transform
+
 from settings import *
 
 
@@ -7,6 +10,7 @@ class Bullet(pygame.sprite.Sprite):
         super().__init__()
         self.game = game
         self.image = self.game.bullet_img
+        self.image = pygame.transform.rotozoom(self.image, 0, self.game.player.bullet_scale)
         self.rect = self.image.get_rect()
         self.rect.center = (x, y)
         self.x = x
