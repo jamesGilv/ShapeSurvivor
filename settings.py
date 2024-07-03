@@ -22,17 +22,27 @@ PLAYER_SIZE = 0.25
 PLAYER_SPEED = 2
 GUN_OFFSET_X = 45
 GUN_OFFSET_Y = 20
-PLAYER_HEALTH = 100
 
 # Bullet settings
-SHOOT_COOLDOWN = 20
-BULLET_SCALE = 1.25
-BULLET_SPEED = 50
 BULLET_LIFETIME = 400
-BULLET_DAMAGE = 10
+
+# Player classes
+class_data = {
+    "Gunner": {"health": 100, "damage": 10, "speed": 2, "cooldown": 20, "player_size": 0.25,
+               "player_img": pygame.image.load('Graphics/long gun.png',), "bullet_speed": 80, "bullet_lifetime": 400,
+               "pierce": 1, "bullet_size": 1.25, "bullet_img": pygame.image.load('Graphics/bullet_1.png'), "xoffset": 45, "yoffset": 20},
+    "Wizard": {"health": 100, "damage": 20, "speed": 2, "cooldown": 50, "player_size": 0.25,
+               "player_img": pygame.image.load('Graphics/wizard.png'), "bullet_speed": 40, "bullet_lifetime": 400,
+               "pierce": 3, "bullet_size": 1.25, "bullet_img": pygame.image.load('Graphics/bullet_0.png'), "xoffset": 45, "yoffset": 20},
+    "Sniper": {"health": 100, "damage": 80, "speed": 3, "cooldown": 100, "player_size": 0.25,
+               "player_img": pygame.image.load('Graphics/sniper.png'), "bullet_speed": 80, "bullet_lifetime": 500,
+               "pierce": 5, "bullet_size": 2, "bullet_img": pygame.image.load('Graphics/bullet_1.png'), "xoffset": 45, "yoffset": 20},
+    "Crossbow": {"health": 100, "damage": 80, "speed": 3, "cooldown": 100, "player_size": 0.25,
+               "player_img": pygame.image.load('Graphics/crossbow.png'), "bullet_speed": 20, "bullet_lifetime": 500,
+               "pierce": 3, "bullet_size": 0.75, "bullet_img": pygame.image.load('Graphics/arrow.png'), "xoffset": -10, "yoffset": 10}
+}
 
 # Enemy settings
-
 shape_data = {
     "circle": {"health": 10, "attack_damage": 15, "speed": 2, "sides": 1, "colour": (0, 200, 255), "radius": 15, "exp": 10},
     "triangle": {"health": 30, "attack_damage": 25, "speed": 2, "sides": 3, "colour": (255, 255, 0), "radius": 30, "exp": 30},

@@ -7,29 +7,35 @@ from bullet import Bullet
 
 
 class Player(pygame.sprite.Sprite):
-    def __init__(self, game, pos):
+    def __init__(self, game, pos, name):
         super().__init__(game.all_sprites_group)
         self.game = game
-        self.image = self.game.player_image
+        self.name = name
+        self.class_info = self.game.player_data[self.name]
+        self.max_health = self.class_info["health"]
+        self.health = self.max_health
+        self.damage = self.class_info["damage"]
+        self.player_speed = self.class_info["speed"]
+        self.fire_delay = self.class_info["cooldown"]
+        self.image = self.class_info["player_img"].convert_alpha()
+        self.image_scale = self.class_info["player_size"]
+        self.image = pygame.transform.rotozoom(self.image, 0, self.image_scale)
         self.base_player_image = self.image
+        self.bullet_speed = self.class_info["bullet_speed"]
+        self.bullet_lifetime = self.class_info["bullet_lifetime"]
+        self.bullet_pierce = self.class_info["pierce"]
+        self.bullet_scale = self.class_info["bullet_size"]
 
         self.pos = pos
         self.vec_pos = Vector2(pos)
         self.base_player_rect = self.base_player_image.get_rect(center=pos)
         self.rect = self.base_player_rect.copy()
 
-        self.player_speed = PLAYER_SPEED
         self.shoot = False
         self.shoot_cooldown = 0
-        self.fire_delay = SHOOT_COOLDOWN
 
-        self.max_health = PLAYER_HEALTH
-        self.health = self.max_health
+        self.gun_barrel_offset = pygame.math.Vector2(self.class_info["xoffset"], self.class_info["yoffset"])
 
-        self.gun_barrel_offset = pygame.math.Vector2(45, 20)
-
-        self.damage = BULLET_DAMAGE
-        self.bullet_scale = 1
         self.experience = 0
         self.level = 0
         self.exp_cap = 100
@@ -73,7 +79,7 @@ class Player(pygame.sprite.Sprite):
         if self.shoot_cooldown == 0 and self.shoot:
             # gun_shot_sound.play()
             spawn_bullet_pos = self.vec_pos + self.gun_barrel_offset.rotate(self.angle)
-            self.bullet = Bullet(spawn_bullet_pos[0], spawn_bullet_pos[1], self.angle, self.game)
+            self.bullet = Bullet(spawn_bullet_pos[0], spawn_bullet_pos[1], self.angle, self.bullet_pierce, self.game)
             self.shoot_cooldown = self.fire_delay
             self.game.bullet_group.add(self.bullet)
             self.game.all_sprites_group.add(self.bullet)
@@ -103,17 +109,18 @@ class Player(pygame.sprite.Sprite):
             self.game.ready_to_spawn = False
             self.game.curr_menu = self.game.end_menu
             self.game.game_time = pygame.time.get_ticks()
+            self.kill()
 
     def add_damage(self):
         self.damage += 10
         self.give_level()
 
     def add_health(self):
-        if self.health == self.max_health or self.health > (self.max_health - 20):
-            self.max_health += 20
-            self.health += 20
+        if self.health == self.max_health or self.health > (self.max_health - 50):
+            self.max_health += 50
+            self.health += 50
         else:
-            self.health += 20
+            self.health += 50
         self.give_level()
 
     def add_speed(self):
@@ -122,17 +129,17 @@ class Player(pygame.sprite.Sprite):
 
     def add_fire(self):
         if self.fire_delay > 1:
-            self.fire_delay -= 1
+            self.fire_delay -= int(self.fire_delay * 0.1)
         else:
             self.fire_delay = 1
         self.give_level()
 
     def bigger_bullet(self):
-        self.bullet_scale += 0.5
+        self.bullet_scale += 0.2
         self.give_level()
 
     def add_exp_scale(self):
-        self.level_scale += 0.5
+        self.level_scale += 0.2
         self.give_level()
 
     def give_level(self):
@@ -141,13 +148,17 @@ class Player(pygame.sprite.Sprite):
         self.exp_cap += 10
 
     def reset_player(self):
-        self.max_health = PLAYER_HEALTH
+        info = self.class_info
+        self.max_health = info["health"]
         self.health = self.max_health
         self.base_player_rect.center = (WIDTH / 2, HEIGHT / 2)
         self.experience = 0
-        self.fire_delay = SHOOT_COOLDOWN
-        self.damage = BULLET_DAMAGE
-        self.player_speed = PLAYER_SPEED
+        self.fire_delay = info["cooldown"]
+        self.damage = info["damage"]
+        self.bullet_pierce = info["pierce"]
+        self.player_speed = info["speed"]
+        self.bullet_speed = info["bullet_speed"]
+        self.bullet_scale = 1
         self.level = 0
 
     def draw_player(self):

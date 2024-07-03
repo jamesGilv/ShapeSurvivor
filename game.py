@@ -25,13 +25,8 @@ class Game():
         self.enemy_group = pygame.sprite.Group()
         self.items_group = pygame.sprite.Group()
 
-        # Images
-        self.player_image = pygame.image.load('Graphics/player.png').convert_alpha()
-        self.player_image = pygame.transform.rotozoom(self.player_image, 0, PLAYER_SIZE)
-        self.bullet_img = pygame.image.load('Graphics/bullet_1.png').convert_alpha()
-        self.bullet_img = pygame.transform.rotozoom(self.bullet_img, 0, BULLET_SCALE)
-
-        self.player = Player(self, (PLAYER_START_X, PLAYER_START_Y))
+        self.player_data = class_data
+        self.player_class = 'Gunner'
 
         self.current_time = 0
         self.start_time = 0
@@ -39,6 +34,7 @@ class Game():
 
         self.main_menu = MainMenu(self)
         self.credits = Credits(self)
+        self.class_select = ClassMenu(self)
         self.level_menu = LevelMenu(self)
         self.end_menu = EndScreen(self)
         self.curr_menu = self.main_menu
@@ -57,6 +53,7 @@ class Game():
             self.check_events()
             if self.BACK_KEY:
                 self.playing = False
+                self.player.kill()
                 self.curr_menu = self.main_menu
             if self.ready_to_spawn:
                 while self.game_scale < 40:
@@ -89,7 +86,8 @@ class Game():
                 elif event.key == pygame.K_SPACE:
                     self.SPACE_KEY = True
             if event.type == self.enemy_timer:
-                Shape(self)
+                if self.ready_to_spawn:
+                    Shape(self)
 
     def start_game(self):
         for bullet in self.bullet_group:
@@ -99,8 +97,10 @@ class Game():
         self.bullet_group.empty()
         self.enemy_group.empty()
         self.ready_to_spawn = True
+        self.player = Player(self, (PLAYER_START_X, PLAYER_START_Y), self.player_class)
         self.player.reset_player()
         self.start_time = pygame.time.get_ticks()
+        self.playing = True
 
     def reset_keys(self):
         self.UP_KEY, self.DOWN_KEY, self.START_KEY, self.BACK_KEY, self.SPACE_KEY = False, False, False, False, False
