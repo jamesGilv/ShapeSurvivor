@@ -23,7 +23,7 @@ class Shape(pygame.sprite.Sprite):
         self.direction_list = [(1, 1), (1, -1), (-1, 1), (-1, -1)]
 
         enemy_info = self.game.shape_data[self.name]
-        self.health = enemy_info["health"] + self.game.player.level * 5
+        self.health = enemy_info["health"] * (int(1 + (self.game.player.level / 5)))
         self.attack_damage = enemy_info["attack_damage"]
         self.speed = enemy_info["speed"]
         self.sides = enemy_info["sides"]

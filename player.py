@@ -38,6 +38,7 @@ class Player(pygame.sprite.Sprite):
 
         self.experience = 0
         self.level = 0
+        self.saved_levels = 0
         self.exp_cap = 100
         self.level_scale = 1
 
@@ -101,8 +102,9 @@ class Player(pygame.sprite.Sprite):
 
     def check_level(self):
         if self.experience >= self.exp_cap:
-            self.game.ready_to_spawn = False
-            self.game.curr_menu = self.game.level_menu
+            self.experience = (self.experience - self.exp_cap)
+            self.exp_cap += 10
+            self.saved_levels += 1
 
     def check_health(self):
         if 0 >= self.health:
@@ -113,7 +115,6 @@ class Player(pygame.sprite.Sprite):
 
     def add_damage(self):
         self.damage += 10
-        self.give_level()
 
     def add_health(self):
         if self.health == self.max_health or self.health > (self.max_health - 50):
@@ -121,31 +122,21 @@ class Player(pygame.sprite.Sprite):
             self.health += 50
         else:
             self.health += 50
-        self.give_level()
 
     def add_speed(self):
         self.player_speed += 0.5
-        self.give_level()
 
     def add_fire(self):
         if self.fire_delay > 1:
             self.fire_delay -= int(self.fire_delay * 0.1)
         else:
             self.fire_delay = 1
-        self.give_level()
 
     def bigger_bullet(self):
         self.bullet_scale += 0.2
-        self.give_level()
 
     def add_exp_scale(self):
         self.level_scale += 0.2
-        self.give_level()
-
-    def give_level(self):
-        self.level += 1
-        self.experience = 0
-        self.exp_cap += 10
 
     def reset_player(self):
         info = self.class_info

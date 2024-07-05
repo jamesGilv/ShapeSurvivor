@@ -85,6 +85,9 @@ class Game():
                     self.START_KEY = True
                 elif event.key == pygame.K_SPACE:
                     self.SPACE_KEY = True
+            if pygame.mouse.get_pressed() == (0, 0, 1) and self.player.saved_levels > 0:
+                self.ready_to_spawn = False
+                self.curr_menu = self.level_menu
             if event.type == self.enemy_timer:
                 if self.ready_to_spawn:
                     Shape(self)
@@ -100,14 +103,15 @@ class Game():
         self.player = Player(self, (PLAYER_START_X, PLAYER_START_Y), self.player_class)
         self.player.reset_player()
         self.start_time = pygame.time.get_ticks()
+        self.game_scale = 2
         self.playing = True
 
     def reset_keys(self):
         self.UP_KEY, self.DOWN_KEY, self.START_KEY, self.BACK_KEY, self.SPACE_KEY = False, False, False, False, False
 
-    def draw_text(self, text, size, x, y):
+    def draw_text(self, text, size, x, y, colour):
         font = pygame.font.Font('Font/GummyBear.ttf', size)
-        text_surface = font.render(text, True, self.WHITE)
+        text_surface = font.render(text, True, colour)
         text_rect = text_surface.get_rect(center=(x, y))
         self.display.blit(text_surface, text_rect)
 
@@ -127,9 +131,11 @@ class Game():
         game_time = int((self.current_time - self.start_time) / 1000)
 
         self.display_health_bar()
-        self.draw_text(f"{self.player.health} / {self.player.max_health}", 40, healthx, healthy)
-        self.draw_text(f"Level: {self.player.level}", 40, levelx, levely)
-        self.draw_text(f"Time: {game_time}", 40, timerx, timery)
+        self.draw_text(f"{self.player.health} / {self.player.max_health}", 40, healthx, healthy, self.WHITE)
+        self.draw_text(f"Level: {self.player.level}", 40, levelx, levely, self.WHITE)
+        self.draw_text(f"Time: {game_time}", 40, timerx, timery, self.WHITE)
+        if self.player.saved_levels > 0:
+            self.draw_text(f"+{self.player.saved_levels}", 30, levelx, levely + 30, self.WHITE)
 
     def display_health_bar(self):
         ratio = self.player.health / self.player.max_health
@@ -150,12 +156,12 @@ class Game():
             if ratio == 1:
                 pygame.draw.rect(self.display, (0, 255, 0), (10, 15, 1260, 20))
             elif ratio >= 0.75:
-                pygame.draw.rect(self.display, (0, 0, 0), (10, 15, self.player.max_health, 20))
-                pygame.draw.rect(self.display, (0, 255, 0), (10, 15, self.player.max_health * ratio, 20))
+                pygame.draw.rect(self.display, (0, 0, 0), (10, 15, 1260, 20))
+                pygame.draw.rect(self.display, (0, 255, 0), (10, 15, 1260 * ratio, 20))
             elif ratio >= 0.25:
-                pygame.draw.rect(self.display, (0, 0, 0), (10, 15, self.player.max_health, 20))
-                pygame.draw.rect(self.display, (255, 255, 0), (10, 15, self.player.max_health * ratio, 20))
+                pygame.draw.rect(self.display, (0, 0, 0), (10, 15, 1260, 20))
+                pygame.draw.rect(self.display, (255, 255, 0), (10, 15, 1260 * ratio, 20))
             else:
-                pygame.draw.rect(self.display, (0, 0, 0), (10, 15, self.player.max_health, 20))
-                pygame.draw.rect(self.display, (255, 0, 0), (10, 15, self.player.max_health * ratio, 20))
+                pygame.draw.rect(self.display, (0, 0, 0), (10, 15, 1260, 20))
+                pygame.draw.rect(self.display, (255, 0, 0), (10, 15, 1260 * ratio, 20))
             pygame.draw.rect(self.display, (255, 255, 255), (10, 15, 1260, 20), 4)

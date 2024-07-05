@@ -28,7 +28,7 @@ BULLET_LIFETIME = 400
 
 # Player classes
 class_data = {
-    "Gunner": {"health": 100, "damage": 10, "speed": 2, "cooldown": 20, "player_size": 0.25,
+    "Gunner": {"health": 100, "damage": 20, "speed": 2, "cooldown": 20, "player_size": 0.25,
                "player_img": pygame.image.load('Graphics/long gun.png',), "bullet_speed": 80, "bullet_lifetime": 400,
                "pierce": 1, "bullet_size": 1.25, "bullet_img": pygame.image.load('Graphics/bullet_1.png'), "xoffset": 45, "yoffset": 20},
     "Wizard": {"health": 100, "damage": 20, "speed": 2, "cooldown": 50, "player_size": 0.25,
