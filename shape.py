@@ -4,32 +4,39 @@ from pygame.math import Vector2
 
 
 class Shape(pygame.sprite.Sprite):
-    def __init__(self, game):
+    def __init__(self, game, side, boss):
         super().__init__(game.all_sprites_group, game.enemy_group)
         self.game = game
         self.alive = True
-        self.x_pos = random.randint(-100, self.game.DISPLAY_W / 2 + 100)
-        self.y_pos = random.randint(-100, self.game.DISPLAY_W / 2 + 100)
+        self.x_pos = random.randint(-100, self.game.DISPLAY_W + 100)
+        self.y_pos = random.randint(-100, self.game.DISPLAY_W + 100)
         self.position = Vector2(self.x_pos, self.y_pos)
         while self.get_vector_distance(self.position, self.game.player.pos) < 300:
-            self.x_pos = random.randint(-100, self.game.DISPLAY_W / 2 + 100)
-            self.y_pos = random.randint(-100, self.game.DISPLAY_W / 2 + 100)
+            self.x_pos = random.randint(-100, self.game.DISPLAY_W + 100)
+            self.y_pos = random.randint(-100, self.game.DISPLAY_W + 100)
             self.position = Vector2(self.x_pos, self.y_pos)
 
-        self.name = random.choice(["circle", "triangle", "square", "pentagon", "hexagon", "septagon", "octagon"])
+        self.sides = side
 
         self.velocity = Vector2()
         self.direction = Vector2()
         self.direction_list = [(1, 1), (1, -1), (-1, 1), (-1, -1)]
 
-        enemy_info = self.game.shape_data[self.name]
+        enemy_info = self.game.shape_data[self.sides]
         self.health = enemy_info["health"] * (int(1 + (self.game.player.level / 5)))
         self.attack_damage = enemy_info["attack_damage"]
         self.speed = enemy_info["speed"]
-        self.sides = enemy_info["sides"]
         self.colour = enemy_info["colour"]
         self.radius = enemy_info["radius"]
         self.exp = enemy_info["exp"]
+
+        if boss:
+            self.x_pos = random.choice([-100, self.game.DISPLAY_W + 100])
+            self.y_pos = random.choice([-100, self.game.DISPLAY_H + 100])
+            self.position = Vector2(self.x_pos, self.y_pos)
+            self.health *= 5
+            self.radius *= 2
+            self.exp *= 2
 
         self.rect = pygame.Rect(self.x_pos, self.y_pos, self.radius * 2, self.radius * 2)
         self.rect.center = self.position
@@ -97,7 +104,7 @@ class Shape(pygame.sprite.Sprite):
             self.check_alive()
             self.move_shape()
             self.check_player_collision()
-            if self.name == "circle":
+            if self.sides == 1:
                 pygame.draw.circle(self.game.display, self.colour, (self.rect.x, self.rect.y), self.radius)
             else:
                 self.game.draw_shape(self.colour, self.sides, 0, self.rect.x, self.rect.y, self.radius)

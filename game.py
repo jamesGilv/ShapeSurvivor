@@ -1,3 +1,5 @@
+import random
+
 import pygame
 import math
 from menu import *
@@ -42,10 +44,15 @@ class Game():
         self.ready_to_spawn = False
 
         self.shape_data = shape_data
+        self.sides = [1, 3, 4]
 
         self.enemy_timer = pygame.USEREVENT + 1
         self.game_scale = 2
         pygame.time.set_timer(self.enemy_timer, int(2000 / self.game_scale))
+        self.scale_timer = pygame.USEREVENT + 2
+        pygame.time.set_timer(self.scale_timer, 30000)
+        self.boss_timer = pygame.USEREVENT + 2
+        pygame.time.set_timer(self.boss_timer, 60000)
 
     def game_loop(self):
         while self.playing:
@@ -90,7 +97,12 @@ class Game():
                 self.curr_menu = self.level_menu
             if event.type == self.enemy_timer:
                 if self.ready_to_spawn:
-                    Shape(self)
+                    Shape(self, random.choice(self.sides), False)
+            if event.type == self.scale_timer:
+                if self.sides[-1] < 10:
+                    self.sides.append(self.sides[-1] + 1)
+            if event.type == self.boss_timer:
+                Shape(self, self.sides[-1], True)
 
     def start_game(self):
         for bullet in self.bullet_group:

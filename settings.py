@@ -44,11 +44,13 @@ class_data = {
 
 # Enemy settings
 shape_data = {
-    "circle": {"health": 10, "attack_damage": 15, "speed": 2, "sides": 1, "colour": (0, 200, 255), "radius": 15, "exp": 10},
-    "triangle": {"health": 30, "attack_damage": 25, "speed": 2, "sides": 3, "colour": (255, 255, 0), "radius": 30, "exp": 30},
-    "square": {"health": 40, "attack_damage": 40, "speed": 1, "sides": 4, "colour": (255, 51, 242), "radius": 30, "exp": 40},
-    "pentagon": {"health": 50, "attack_damage": 50, "speed": 1, "sides": 5, "colour": (0, 0, 10), "radius": 25, "exp": 50},
-    "hexagon": {"health": 60, "attack_damage": 60, "speed": 1, "sides": 6, "colour": (0, 255, 150), "radius": 25, "exp": 60},
-    "septagon": {"health": 70, "attack_damage": 70, "speed": 1, "sides": 7, "colour": (0, 0, 100), "radius": 20, "exp": 70},
-    "octagon": {"health": 80, "attack_damage": 80, "speed": 1, "sides": 8, "colour": (255, 0, 0), "radius": 20, "exp": 80},
+    1: {"health": 10, "attack_damage": 15, "speed": 2, "colour": (0, 200, 255), "radius": 15, "exp": 10},
+    3: {"health": 30, "attack_damage": 25, "speed": 2, "colour": (255, 255, 0), "radius": 30, "exp": 30},
+    4: {"health": 40, "attack_damage": 40, "speed": 1, "colour": (255, 51, 242), "radius": 30, "exp": 40},
+    5: {"health": 50, "attack_damage": 50, "speed": 1, "colour": (0, 0, 10), "radius": 25, "exp": 50},
+    6: {"health": 60, "attack_damage": 60, "speed": 1, "colour": (0, 255, 150), "radius": 25, "exp": 60},
+    7: {"health": 70, "attack_damage": 70, "speed": 1, "colour": (0, 0, 100), "radius": 20, "exp": 70},
+    8: {"health": 80, "attack_damage": 80, "speed": 1, "colour": (255, 0, 0), "radius": 20, "exp": 80},
+    9: {"health": 90, "attack_damage": 90, "speed": 1, "colour": (192, 0, 240), "radius": 20, "exp": 90},
+    10: {"health": 100, "attack_damage": 100, "speed": 1, "colour": (101, 0, 127), "radius": 20, "exp": 100}
 }
