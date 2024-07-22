@@ -4,7 +4,7 @@ import pygame
 import math
 from menu import *
 from settings import *
-from player import Player
+# from player import Player
 from shape import Shape
 
 
@@ -22,13 +22,12 @@ class Game():
 
         # Groups
         self.all_sprites_group = pygame.sprite.Group()
-        self.obstacles_group = pygame.sprite.Group()
         self.bullet_group = pygame.sprite.Group()
         self.enemy_group = pygame.sprite.Group()
         self.items_group = pygame.sprite.Group()
 
         self.player_data = class_data
-        self.player_class = 'Gunner'
+        self.item_data = item_data
 
         self.current_time = 0
         self.start_time = 0
@@ -38,6 +37,7 @@ class Game():
         self.credits = Credits(self)
         self.class_select = ClassMenu(self)
         self.level_menu = LevelMenu(self)
+        self.evo_menu = EvoScreen(self)
         self.end_menu = EndScreen(self)
         self.curr_menu = self.main_menu
 
@@ -47,12 +47,8 @@ class Game():
         self.sides = [1, 3, 4]
 
         self.enemy_timer = pygame.USEREVENT + 1
-        self.game_scale = 2
-        pygame.time.set_timer(self.enemy_timer, int(2000 / self.game_scale))
         self.scale_timer = pygame.USEREVENT + 2
-        pygame.time.set_timer(self.scale_timer, 30000)
-        self.boss_timer = pygame.USEREVENT + 2
-        pygame.time.set_timer(self.boss_timer, 60000)
+        self.boss_timer = pygame.USEREVENT + 3
 
     def game_loop(self):
         while self.playing:
@@ -60,11 +56,9 @@ class Game():
             self.check_events()
             if self.BACK_KEY:
                 self.playing = False
-                self.player.kill()
+                self.reset_game()
                 self.curr_menu = self.main_menu
             if self.ready_to_spawn:
-                while self.game_scale < 40:
-                    self.game_scale += 0.1
                 self.display.fill((0, 100, 0))
                 self.all_sprites_group.update()
                 self.display_ui()
@@ -109,14 +103,26 @@ class Game():
             bullet.kill()
         for shape in self.enemy_group:
             shape.kill()
+        for item in self.items_group:
+            item.kill()
         self.bullet_group.empty()
         self.enemy_group.empty()
+        self.items_group.empty()
         self.ready_to_spawn = True
-        self.player = Player(self, (PLAYER_START_X, PLAYER_START_Y), self.player_class)
         self.player.reset_player()
         self.start_time = pygame.time.get_ticks()
-        self.game_scale = 2
+        pygame.time.set_timer(self.enemy_timer, 1000)
+        pygame.time.set_timer(self.scale_timer, 30000)
+        pygame.time.set_timer(self.boss_timer, 60000)
         self.playing = True
+
+    def reset_game(self):
+        self.sides = [1, 3, 4]
+        self.player.kill()
+        pygame.time.set_timer(self.enemy_timer, 0)
+        pygame.time.set_timer(self.scale_timer, 0)
+        pygame.time.set_timer(self.boss_timer, 0)
+
 
     def reset_keys(self):
         self.UP_KEY, self.DOWN_KEY, self.START_KEY, self.BACK_KEY, self.SPACE_KEY = False, False, False, False, False
@@ -138,16 +144,28 @@ class Game():
 
     def display_ui(self):
         healthx, healthy = 150, 60
-        levelx, levely = 1000, 60
-        timerx, timery = self.DISPLAY_W / 2, 60
+        levelx, levely = 500, 60
+        timerx, timery = 800, 60
+        coinx, coiny = 1100, 60
+        heartx, hearty = 1100, 100
         game_time = int((self.current_time - self.start_time) / 1000)
 
         self.display_health_bar()
         self.draw_text(f"{self.player.health} / {self.player.max_health}", 40, healthx, healthy, self.WHITE)
         self.draw_text(f"Level: {self.player.level}", 40, levelx, levely, self.WHITE)
         self.draw_text(f"Time: {game_time}", 40, timerx, timery, self.WHITE)
+        self.display_item(coinx, coiny, "coin")
+        self.display_item(heartx, hearty, "heart")
+        self.draw_text(f"{self.player.coins}", 40, coinx + 40, coiny, self.WHITE)
+        self.draw_text(f"{self.player.lives}", 40, heartx + 40, hearty, (255, 0, 0))
         if self.player.saved_levels > 0:
             self.draw_text(f"+{self.player.saved_levels}", 30, levelx, levely + 30, self.WHITE)
+
+    def display_item(self, x, y, name):
+        info = self.item_data[name]
+        image = info["image"].convert_alpha()
+        rect = image.get_rect(center=(x, y))
+        self.display.blit(image, rect)
 
     def display_health_bar(self):
         ratio = self.player.health / self.player.max_health

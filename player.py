@@ -1,13 +1,13 @@
 import pygame.time
 
-from settings import *
 from pygame.math import Vector2
 import math
-from bullet import Bullet
+import random
+from bullet import Bullet, Grenade, Fire, Arrow, Lightning
 
 
 class Player(pygame.sprite.Sprite):
-    def __init__(self, game, pos, name):
+    def __init__(self, game, name):
         super().__init__(game.all_sprites_group)
         self.game = game
         self.name = name
@@ -25,22 +25,27 @@ class Player(pygame.sprite.Sprite):
         self.bullet_lifetime = self.class_info["bullet_lifetime"]
         self.bullet_pierce = self.class_info["pierce"]
         self.bullet_scale = self.class_info["bullet_size"]
+        self.stun = self.class_info["stun"]
+        self.evo = 0
 
-        self.pos = pos
-        self.vec_pos = Vector2(pos)
-        self.base_player_rect = self.base_player_image.get_rect(center=pos)
+        self.pos = (self.game.DISPLAY_W / 2, self.game.DISPLAY_H / 2)
+        self.vec_pos = Vector2(self.pos)
+        self.base_player_rect = self.base_player_image.get_rect(center=self.pos)
         self.rect = self.base_player_rect.copy()
 
         self.shoot = False
         self.shoot_cooldown = 0
 
-        self.gun_barrel_offset = pygame.math.Vector2(self.class_info["xoffset"], self.class_info["yoffset"])
+        self.gun_barrel_offset = Vector2(self.class_info["xoffset"], self.class_info["yoffset"])
 
         self.experience = 0
         self.level = 0
         self.saved_levels = 0
         self.exp_cap = 100
         self.level_scale = 1
+
+        self.coins = 0
+        self.lives = 0
 
     def player_turning(self):
         self.mouse_coords = pygame.mouse.get_pos()
@@ -78,12 +83,9 @@ class Player(pygame.sprite.Sprite):
 
     def is_shooting(self):
         if self.shoot_cooldown == 0 and self.shoot:
-            # gun_shot_sound.play()
             spawn_bullet_pos = self.vec_pos + self.gun_barrel_offset.rotate(self.angle)
-            self.bullet = Bullet(spawn_bullet_pos[0], spawn_bullet_pos[1], self.angle, self.bullet_pierce, self.game)
+            Bullet(spawn_bullet_pos[0], spawn_bullet_pos[1], self.angle, self.bullet_pierce, self.game)
             self.shoot_cooldown = self.fire_delay
-            self.game.bullet_group.add(self.bullet)
-            self.game.all_sprites_group.add(self.bullet)
 
     def move(self):
         self.base_player_rect.centerx += self.velocity_x
@@ -105,35 +107,35 @@ class Player(pygame.sprite.Sprite):
             self.experience = (self.experience - self.exp_cap)
             self.exp_cap += 10
             self.saved_levels += 1
+        if self.level >= 25 and self.evo == 0:
+            self.game.ready_to_spawn = False
+            self.game.curr_menu = self.game.evo_menu
 
     def check_health(self):
         if 0 >= self.health:
-            self.game.ready_to_spawn = False
-            self.game.curr_menu = self.game.end_menu
-            self.game.game_time = pygame.time.get_ticks()
-            self.kill()
+            if self.lives == 0:
+                self.game.ready_to_spawn = False
+                self.game.curr_menu = self.game.end_menu
+                self.game.game_time = pygame.time.get_ticks()
+                self.game.reset_game()
+            else:
+                self.lives -= 1
+                if self.max_health >= 200:
+                    self.max_health = int(self.max_health / 2)
+                    self.health = self.max_health
+                else:
+                    self.max_health = 100
+                    self.health = self.max_health
 
     def add_damage(self):
         self.damage += 10
 
     def add_health(self):
-        if self.health == self.max_health or self.health > (self.max_health - 50):
-            self.max_health += 50
-            self.health += 50
-        else:
-            self.health += 50
+        self.max_health += 50
+        self.health += 50
 
     def add_speed(self):
         self.player_speed += 0.5
-
-    def add_fire(self):
-        if self.fire_delay > 1:
-            self.fire_delay -= int(self.fire_delay * 0.1)
-        else:
-            self.fire_delay = 1
-
-    def bigger_bullet(self):
-        self.bullet_scale += 0.2
 
     def add_exp_scale(self):
         self.level_scale += 0.2
@@ -142,7 +144,7 @@ class Player(pygame.sprite.Sprite):
         info = self.class_info
         self.max_health = info["health"]
         self.health = self.max_health
-        self.base_player_rect.center = (WIDTH / 2, HEIGHT / 2)
+        self.base_player_rect.center = (self.game.DISPLAY_W / 2, self.game.DISPLAY_H / 2)
         self.experience = 0
         self.fire_delay = info["cooldown"]
         self.damage = info["damage"]
@@ -151,6 +153,7 @@ class Player(pygame.sprite.Sprite):
         self.bullet_speed = info["bullet_speed"]
         self.bullet_scale = 1
         self.level = 0
+        self.lives = 0
 
     def draw_player(self):
         self.game.display.blit(self.image, self.rect)
@@ -167,3 +170,133 @@ class Player(pygame.sprite.Sprite):
             self.shoot_cooldown -= 1
         if self.shoot:
             self.is_shooting()
+
+
+class Gunner(Player):
+    def __init__(self, game):
+        Player.__init__(self, game, "Gunner")
+        self.dual_gun_img = self.class_info["evo1_img"].convert_alpha()
+
+    def upgrade_1(self):
+        self.bullet_speed += 5
+
+    def upgrade_2(self):
+        if self.fire_delay > 1:
+            self.fire_delay -= 1
+        else:
+            self.fire_delay = 1
+
+    def check_evo(self):
+        if self.evo == 1:
+            self.base_player_image = pygame.transform.rotozoom(self.dual_gun_img, 0, self.image_scale)
+
+    def is_shooting(self):
+        if self.shoot_cooldown == 0 and self.shoot:
+            spawn_bullet_pos = self.vec_pos + self.gun_barrel_offset.rotate(self.angle)
+            if self.evo == 0:
+                Bullet(spawn_bullet_pos[0], spawn_bullet_pos[1], self.angle, self.bullet_pierce, self.game)
+                self.shoot_cooldown = self.fire_delay
+            elif self.evo == 1:
+                Bullet(spawn_bullet_pos[0], spawn_bullet_pos[1], self.angle, self.bullet_pierce, self.game)
+                spawn_2 = self.vec_pos + Vector2(20, 0) + self.gun_barrel_offset.rotate(self.angle)
+                Bullet(spawn_2[0], spawn_2[1], self.angle, self.bullet_pierce, self.game)
+                self.shoot_cooldown = self.fire_delay
+            elif self.evo == 2:
+                angles = random.sample(range(1, 40), 4)
+                Bullet(spawn_bullet_pos[0], spawn_bullet_pos[1], self.angle, self.bullet_pierce, self.game)
+                Bullet(spawn_bullet_pos[0] + 5, spawn_bullet_pos[1], self.angle + angles[0], self.bullet_pierce, self.game)
+                Bullet(spawn_bullet_pos[0] - 5, spawn_bullet_pos[1], self.angle + angles[1], self.bullet_pierce, self.game)
+                Bullet(spawn_bullet_pos[0] + 10, spawn_bullet_pos[1], self.angle + angles[2], self.bullet_pierce, self.game)
+                Bullet(spawn_bullet_pos[0] - 10, spawn_bullet_pos[1], self.angle + angles[3], self.bullet_pierce, self.game)
+                self.shoot_cooldown = 30
+
+
+class Sniper(Player):
+    def __init__(self, game):
+        Player.__init__(self, game, "Sniper")
+
+    def upgrade_1(self):
+        self.bullet_pierce += 1
+
+    def upgrade_2(self):
+        self.bullet_scale += 0.2
+
+    def check_evo(self):
+        if self.evo == 2:
+            self.shoot_cooldown = 50
+
+    def is_shooting(self):
+        if self.shoot_cooldown == 0 and self.shoot:
+            spawn_bullet_pos = self.vec_pos + self.gun_barrel_offset.rotate(self.angle)
+            if self.evo == 0:
+                Bullet(spawn_bullet_pos[0], spawn_bullet_pos[1], self.angle, self.bullet_pierce, self.game)
+            elif self.evo == 1:
+                Bullet(spawn_bullet_pos[0], spawn_bullet_pos[1], self.angle, self.bullet_pierce, self.game)
+                Bullet(spawn_bullet_pos[0], spawn_bullet_pos[1], self.angle - 90, self.bullet_pierce, self.game)
+                Bullet(spawn_bullet_pos[0], spawn_bullet_pos[1], self.angle - 180, self.bullet_pierce, self.game)
+                Bullet(spawn_bullet_pos[0], spawn_bullet_pos[1], self.angle - 270, self.bullet_pierce, self.game)
+            elif self.evo == 2:
+                Grenade(spawn_bullet_pos[0], spawn_bullet_pos[1], self.angle, self.game)
+            self.shoot_cooldown = self.fire_delay
+
+class Wizard(Player):
+    def __init__(self, game):
+        Player.__init__(self, game, "Wizard")
+        self.fire_img = self.class_info["evo1_img"].convert_alpha()
+        self.ewiz_img = self.class_info["evo2_img"].convert_alpha()
+
+    def upgrade_1(self):
+        self.stun += 5
+
+    def upgrade_2(self):
+        self.bullet_scale += 0.2
+
+    def check_evo(self):
+        if self.evo == 1:
+            self.image = self.fire_img
+        elif self.evo == 2:
+            self.image = self.ewiz_img
+        self.base_player_image = pygame.transform.rotozoom(self.image, 0, self.image_scale)
+
+    def is_shooting(self):
+        if self.shoot_cooldown == 0 and self.shoot:
+            spawn_bullet_pos = self.vec_pos + self.gun_barrel_offset.rotate(self.angle)
+            if self.evo == 0:
+                Bullet(spawn_bullet_pos[0], spawn_bullet_pos[1], self.angle, self.bullet_pierce, self.game)
+            elif self.evo == 1:
+                Fire(spawn_bullet_pos[0], spawn_bullet_pos[1], self.angle, self.bullet_pierce, self.game)
+            elif self.evo == 2:
+                Lightning(spawn_bullet_pos[0], spawn_bullet_pos[1], self.angle, self.game)
+            self.shoot_cooldown = self.fire_delay
+
+
+class Crossbow(Player):
+    def __init__(self, game):
+        Player.__init__(self, game, "Crossbow")
+
+    def upgrade_1(self):
+        self.stun += 5
+
+    def upgrade_2(self):
+        self.bullet_speed += 5
+
+    def check_evo(self):
+        if self.evo == 2:
+            self.bullet_scale = 2
+            self.gun_barrel_offset = Vector2(-20, -10)
+
+    def is_shooting(self):
+        if self.shoot_cooldown == 0 and self.shoot:
+            spawn_bullet_pos = self.base_player_rect.center + self.gun_barrel_offset.rotate(self.angle)
+            if self.evo == 0:
+                Arrow(spawn_bullet_pos[0], spawn_bullet_pos[1], self.angle, self.bullet_pierce, self.game)
+            elif self.evo == 1:
+                Arrow(spawn_bullet_pos[0], spawn_bullet_pos[1], self.angle, self.bullet_pierce, self.game)
+                Arrow(spawn_bullet_pos[0], spawn_bullet_pos[1], self.angle - 10, self.bullet_pierce, self.game)
+                Arrow(spawn_bullet_pos[0], spawn_bullet_pos[1], self.angle + 10, self.bullet_pierce, self.game)
+            elif self.evo == 2:
+                self.bullet_scale = 2
+                self.gun_barrel_offset = Vector2(-20, -10)
+                spawn_bullet_pos = self.vec_pos + self.gun_barrel_offset.rotate(self.angle)
+                Arrow(spawn_bullet_pos[0], spawn_bullet_pos[1], self.angle, 10, self.game)
+            self.shoot_cooldown = self.fire_delay
