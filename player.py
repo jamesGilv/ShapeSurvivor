@@ -88,6 +88,7 @@ class Player(pygame.sprite.Sprite):
             self.shoot_cooldown = self.fire_delay
 
     def move(self):
+        self.check_position()
         self.base_player_rect.centerx += self.velocity_x
 
         self.base_player_rect.centery += self.velocity_y
@@ -95,6 +96,16 @@ class Player(pygame.sprite.Sprite):
         self.rect.center = self.base_player_rect.center
 
         self.vec_pos = (self.base_player_rect.centerx, self.base_player_rect.centery)
+
+    def check_position(self):
+        if self.base_player_rect.top > self.game.DISPLAY_H + 100:
+            self.base_player_rect.centery = -50
+        elif self.base_player_rect.bottom < -100:
+            self.base_player_rect.centery = (self.game.DISPLAY_H + 50)
+        if self.base_player_rect.left > self.game.DISPLAY_W + 100:
+            self.base_player_rect.centerx = -50
+        elif self.base_player_rect.right < -100:
+            self.base_player_rect.centerx = (self.game.DISPLAY_W + 50)
 
     def get_damage(self, amount):
         if self.health > 0:
@@ -176,6 +187,7 @@ class Gunner(Player):
     def __init__(self, game):
         Player.__init__(self, game, "Gunner")
         self.dual_gun_img = self.class_info["evo1_img"].convert_alpha()
+        self.base_player_rect = self.base_player_rect.scale_by(0.35)
 
     def upgrade_1(self):
         self.bullet_speed += 5
@@ -214,6 +226,7 @@ class Gunner(Player):
 class Sniper(Player):
     def __init__(self, game):
         Player.__init__(self, game, "Sniper")
+        self.base_player_rect = self.base_player_rect.scale_by(0.35)
 
     def upgrade_1(self):
         self.bullet_pierce += 1
@@ -244,6 +257,7 @@ class Wizard(Player):
         Player.__init__(self, game, "Wizard")
         self.fire_img = self.class_info["evo1_img"].convert_alpha()
         self.ewiz_img = self.class_info["evo2_img"].convert_alpha()
+        self.base_player_rect = self.base_player_rect.scale_by(0.5)
 
     def upgrade_1(self):
         self.stun += 5
@@ -273,6 +287,7 @@ class Wizard(Player):
 class Crossbow(Player):
     def __init__(self, game):
         Player.__init__(self, game, "Crossbow")
+        self.base_player_rect = self.base_player_rect.scale_by(0.5)
 
     def upgrade_1(self):
         self.stun += 5
