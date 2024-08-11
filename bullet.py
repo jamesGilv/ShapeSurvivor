@@ -6,7 +6,7 @@ import random
 from settings import *
 
 
-class Bullet(pygame.sprite.Sprite):
+class Projectile(pygame.sprite.Sprite):
     def __init__(self, x, y, angle, pierce, game):
         super().__init__(game.all_sprites_group, game.bullet_group)
         self.game = game
@@ -77,9 +77,6 @@ class Bullet(pygame.sprite.Sprite):
         self.rect.x = int(self.x)
         self.rect.y = int(self.y)
 
-        if pygame.time.get_ticks() - self.spawn_time > self.bullet_lifetime or self.bullet_pierce == 0:
-            self.kill()
-
     def bullet_collisions(self):
         hits = pygame.sprite.groupcollide(self.game.enemy_group, self.game.bullet_group, False, False, hitbox_collide)
 
@@ -96,9 +93,26 @@ class Bullet(pygame.sprite.Sprite):
         self.draw_bullet()
 
 
-class Grenade(Bullet):
+class Bullet(Projectile):
+    def __init__(self, x, y, angle, pierce, game):
+        Projectile.__init__(self, x, y, angle, pierce, game)
+        self.knockback_x = self.game.player.knockback * self.x_vel
+        self.knockback_y = self.game.player.knockback * self.y_vel
+        self.knockback = pygame.math.Vector2(self.knockback_x, self.knockback_y)
+
+    def bullet_collisions(self):
+        hits = pygame.sprite.groupcollide(self.game.enemy_group, self.game.bullet_group, False, False, hitbox_collide)
+
+        for hit in hits:
+            hit.health -= self.game.player.damage
+            if hit.health > 0 :
+                hit.position += self.knockback
+
+
+
+class Grenade(Projectile):
     def __init__(self, x, y, angle, game):
-        Bullet.__init__(self, x, y, angle, 1, game)
+        Projectile.__init__(self, x, y, angle, 1, game)
         self.image = pygame.image.load('Graphics/grenade.png').convert_alpha()
         self.image = pygame.transform.rotozoom(self.image, 0, 0.5)
         self.rect = self.image.get_rect(center=(self.x, self.y))
@@ -112,9 +126,9 @@ class Grenade(Bullet):
             Explosion(self.x, self.y, self.game)
 
 
-class Fire(Bullet):
+class Fire(Projectile):
     def __init__(self, x, y, angle, pierce, game):
-        Bullet.__init__(self, x, y, angle, pierce, game)
+        Projectile.__init__(self, x, y, angle, pierce, game)
         info = self.game.player_data[self.game.player_class]
         self.image = info["fire_img"].convert_alpha()
 
@@ -127,14 +141,14 @@ class Fire(Bullet):
             hit.health -= self.game.player.damage
 
 
-class Arrow(Bullet):
+class Arrow(Projectile):
     def __init__(self, x, y, angle, pierce, game):
-        Bullet.__init__(self, x, y, angle, pierce, game)
+        Projectile.__init__(self, x, y, angle, pierce, game)
 
 
-class Lightning(Bullet):
+class Lightning(Projectile):
     def __init__(self, x, y, angle, game):
-        Bullet.__init__(self, x, y, angle, 1, game)
+        Projectile.__init__(self, x, y, angle, 1, game)
 
     def bullet_collisions(self):
         hits = pygame.sprite.groupcollide(self.game.enemy_group, self.game.bullet_group, False, True)

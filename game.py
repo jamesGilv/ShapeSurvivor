@@ -49,6 +49,10 @@ class Game():
         self.enemy_timer = pygame.USEREVENT + 1
         self.scale_timer = pygame.USEREVENT + 2
         self.boss_timer = pygame.USEREVENT + 3
+        self.ring_timer = pygame.USEREVENT + 4
+        self.survive_timer = pygame.USEREVENT + 5
+
+        self.game_won = False
 
     def game_loop(self):
         while self.playing:
@@ -97,6 +101,11 @@ class Game():
                     self.sides.append(self.sides[-1] + 1)
             if event.type == self.boss_timer:
                 Shape(self, self.sides[-1], True)
+            if event.type == self.ring_timer:
+                self.spawn_ring()
+            if event.type == self.survive_timer:
+                for shape in self.ring_shapes:
+                    shape.kill()
 
     def start_game(self):
         for bullet in self.bullet_group:
@@ -114,6 +123,7 @@ class Game():
         pygame.time.set_timer(self.enemy_timer, 1000)
         pygame.time.set_timer(self.scale_timer, 30000)
         pygame.time.set_timer(self.boss_timer, 60000)
+        pygame.time.set_timer(self.ring_timer, 120000)
         self.playing = True
 
     def reset_game(self):
@@ -122,6 +132,7 @@ class Game():
         pygame.time.set_timer(self.enemy_timer, 0)
         pygame.time.set_timer(self.scale_timer, 0)
         pygame.time.set_timer(self.boss_timer, 0)
+        pygame.time.set_timer(self.ring_timer, 0)
 
 
     def reset_keys(self):
@@ -133,11 +144,11 @@ class Game():
         text_rect = text_surface.get_rect(center=(x, y))
         self.display.blit(text_surface, text_rect)
 
-    def draw_shape(self, colour, num_sides, tilt_angle, x, y, radius):
+    def draw_shape(self, colour, num_sides, x, y, radius):
         pts = []
         for i in range(num_sides):
-            x = x + radius * math.cos(tilt_angle + math.pi * 2 * i / num_sides)
-            y = y + radius * math.sin(tilt_angle + math.pi * 2 * i / num_sides)
+            x = x + radius * math.cos(math.pi * 2 * i / num_sides)
+            y = y + radius * math.sin(math.pi * 2 * i / num_sides)
             pts.append([int(x), int(y)])
 
         pygame.draw.polygon(self.display, colour, pts)
@@ -195,3 +206,19 @@ class Game():
                 pygame.draw.rect(self.display, (0, 0, 0), (10, 15, 1260, 20))
                 pygame.draw.rect(self.display, (255, 0, 0), (10, 15, 1260 * ratio, 20))
             pygame.draw.rect(self.display, (255, 255, 255), (10, 15, 1260, 20), 4)
+
+    def spawn_ring(self):
+        radius = 400
+        spawns = 32
+        self.ring_shapes = []
+        time = 30000
+        for i in range(spawns):
+            x = self.player.base_player_rect.centerx + radius * math.cos(math.pi * 2 * i / spawns)
+            y = self.player.base_player_rect.centery + radius * math.sin(math.pi * 2 * i / spawns)
+            if 0 < x < self.DISPLAY_W and 0 < y < self.DISPLAY_H:
+                center = pygame.math.Vector2(x, y)
+                spawn = Shape(self, self.sides[-1], False)
+                spawn.speed = 0
+                spawn.position = center
+                self.ring_shapes.append(spawn)
+        pygame.time.set_timer(self.survive_timer, time, 1)

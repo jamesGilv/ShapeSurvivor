@@ -26,6 +26,7 @@ class Player(pygame.sprite.Sprite):
         self.bullet_pierce = self.class_info["pierce"]
         self.bullet_scale = self.class_info["bullet_size"]
         self.stun = self.class_info["stun"]
+        self.knockback = 0
         self.evo = 0
 
         self.pos = (self.game.DISPLAY_W / 2, self.game.DISPLAY_H / 2)
@@ -138,18 +139,12 @@ class Player(pygame.sprite.Sprite):
                     self.max_health = 100
                     self.health = self.max_health
 
-    def add_damage(self):
-        self.damage += 10
-
     def add_health(self):
         self.max_health += 50
         self.health += 50
 
     def add_speed(self):
         self.player_speed += 0.5
-
-    def add_exp_scale(self):
-        self.level_scale += 0.2
 
     def reset_player(self):
         info = self.class_info
@@ -165,6 +160,7 @@ class Player(pygame.sprite.Sprite):
         self.bullet_scale = 1
         self.level = 0
         self.lives = 0
+        self.coins = 0
 
     def draw_player(self):
         self.game.display.blit(self.image, self.rect)
@@ -197,6 +193,12 @@ class Gunner(Player):
             self.fire_delay -= 1
         else:
             self.fire_delay = 1
+
+    def upgrade_3(self):
+        self.knockback += 0.1
+
+    def upgrade_4(self):
+        self.level_scale += 0.2
 
     def check_evo(self):
         if self.evo == 1:
@@ -234,6 +236,12 @@ class Sniper(Player):
     def upgrade_2(self):
         self.bullet_scale += 0.2
 
+    def upgrade_3(self):
+        self.damage += 10
+
+    def upgrade_4(self):
+        self.knockback += 0.1
+
     def check_evo(self):
         if self.evo == 2:
             self.shoot_cooldown = 50
@@ -258,12 +266,19 @@ class Wizard(Player):
         self.fire_img = self.class_info["evo1_img"].convert_alpha()
         self.ewiz_img = self.class_info["evo2_img"].convert_alpha()
         self.base_player_rect = self.base_player_rect.scale_by(0.5)
+        self.effect_damage = self.damage
 
     def upgrade_1(self):
         self.stun += 5
 
     def upgrade_2(self):
         self.bullet_scale += 0.2
+
+    def upgrade_3(self):
+        self.damage += 10
+
+    def upgrade_4(self):
+        self.effect_damage += 10
 
     def check_evo(self):
         if self.evo == 1:
@@ -294,6 +309,15 @@ class Crossbow(Player):
 
     def upgrade_2(self):
         self.bullet_speed += 5
+
+    def upgrade_3(self):
+        self.bullet_pierce += 1
+
+    def upgrade_4(self):
+        if self.fire_delay > 1:
+            self.fire_delay -= 1
+        else:
+            self.fire_delay = 1
 
     def check_evo(self):
         if self.evo == 2:

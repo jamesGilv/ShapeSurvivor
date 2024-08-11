@@ -53,7 +53,7 @@ class MainMenu(Menu):
                 self.game.draw_text("Credits", 30, self.creditsx, self.creditsy, (255, 255, 0))
             self.game.draw_text("Controls:", 20, self.game.DISPLAY_W / 2, self.game.DISPLAY_H / 2 + 200, (255, 255, 255))
             self.game.draw_text("Aim: L-Mouse     Confirm: Space     Move: wasd     Upgrade: R-Mouse", 20, self.mid_w, self.mid_h + 250, (255, 255, 255))
-            self.game.draw_shape((255, 0, 0), 8, 0, self.mid_w - 25, self.mid_h - 75, 50)
+            self.game.draw_shape((255, 0, 0), 8, self.mid_w - 25, self.mid_h - 75, 50)
             self.blit_screen()
 
     def check_mouse(self):
@@ -168,23 +168,26 @@ class LevelMenu(Menu):
         Menu.__init__(self, game)
         self.state = 'Damage'
         self.levelx, self.levely = self.game.DISPLAY_W / 2, self.game.DISPLAY_H / 6
-        self.damagex, self.damagey = self.mid_w - 280, self.mid_h - 50
-        self.damage_rect = self.text_rect(self.damagex, self.damagey, 300, 50)
-        self.healthx, self.healthy = self.mid_w - 280, self.mid_h + 50
+        self.healthx, self.healthy = self.mid_w - 280, self.mid_h - 50
         self.health_rect = self.text_rect(self.healthx, self.healthy, 300, 50)
         self.speedx, self.speedy = self.mid_w + 80, self.mid_h - 50
         self.speed_rect = self.text_rect(self.speedx, self.speedy, 300, 50)
-        self.expx, self.expy = self.mid_w + 80, self.mid_h + 50
-        self.exp_rect = self.text_rect(self.expx, self.expy, 300, 50)
-        self.up_1x, self.up_1y = self.mid_w - 280, self.mid_h + 150
+        self.up_1x, self.up_1y = self.mid_w - 280, self.mid_h + 50
         self.up_1_rect = self.text_rect(self.up_1x, self.up_1y, 300, 50)
-        self.up_2x, self.up_2y = self.mid_w + 80, self.mid_h + 150
+        self.up_2x, self.up_2y = self.mid_w + 80, self.mid_h + 50
         self.up_2_rect = self.text_rect(self.up_2x, self.up_2y, 300, 50)
+        self.up_3x, self.up_3y = self.mid_w - 280, self.mid_h + 150
+        self.up_3_rect = self.text_rect(self.up_3x, self.up_3y, 300, 50)
+        self.up_4x, self.up_4y = self.mid_w + 80, self.mid_h + 150
+        self.up_4_rect = self.text_rect(self.up_4x, self.up_4y, 300, 50)
+
         self.itemx, self.itemy = 1200, 50
         self.lifex, self.lifey = 1100, 300
         self.life_rect = self.text_rect(self.lifex, self.lifey, 300, 50)
         self.killx, self.killy = 1100, 400
         self.kill_rect = self.text_rect(self.killx, self.killy, 300, 50)
+        self.winx, self.winy = 1100, 500
+        self.win_rect = self.text_rect(self.winx, self.winy, 300, 50)
         self.item_data = self.game.item_data
 
     def display_menu(self):
@@ -192,26 +195,31 @@ class LevelMenu(Menu):
         info = self.game.player_data[self.game.player_class]
         self.up_1 = info["up_1"]
         self.up_2 = info["up_2"]
+        self.up_3 = info["up_3"]
+        self.up_4 = info["up_4"]
         while self.run_display:
             self.game.check_events()
             self.check_input()
             self.game.display.fill((40, 40, 100))
             self.game.draw_text("Select upgrade, space to confirm", 50, self.levelx, self.levely, (255, 255, 255))
             self.game.draw_text(f"Levels remaining: {self.game.player.saved_levels}", 40, self.levelx, self.levely + 50, (255, 255, 255))
-            self.draw_level("Damage", self.damagex, self.damagey)
             self.draw_level("Health", self.healthx, self.healthy)
             self.draw_level("Speed", self.speedx, self.speedy)
             self.draw_level(self.up_1, self.up_1x, self.up_1y)
             self.draw_level(self.up_2, self.up_2x, self.up_2y)
-            self.draw_level("Exp scale", self.expx, self.expy)
+            self.draw_level(self.up_3, self.up_3x, self.up_3y)
+            self.draw_level(self.up_4, self.up_4x, self.up_4y)
+
             self.draw_item("coin", self.itemx - 40, self.itemy)
             self.draw_level("Extra Life", self.lifex, self.lifey)
             self.draw_level("Clear screen", self.killx, self.killy)
+            self.draw_level("Win game", self.winx, self.winy)
             self.game.draw_text(f"{self.game.player.coins}", 40, self.itemx, self.itemy, (255, 255, 255))
             self.draw_item("heart", self.itemx - 40, self.itemy + 40)
             self.game.draw_text(f"{self.game.player.lives}", 40, self.itemx, self.itemy + 40, (255, 255, 255))
             self.game.draw_text("10", 30, self.lifex, self.lifey + 50, (255, 255, 0))
             self.game.draw_text("20", 30, self.killx, self.killy + 50, (255, 255, 0))
+            self.game.draw_text("100", 30, self.winx, self.winy + 50, (255, 255, 0))
             self.game.draw_text("Shop", 50, 1100, 200, (255, 255, 255))
             self.blit_screen()
 
@@ -230,9 +238,6 @@ class LevelMenu(Menu):
 
     def check_mouse(self):
         current_pos = pygame.mouse.get_pos()
-        if self.damage_rect.collidepoint(current_pos[0], current_pos[1]):
-            self.cursor_rect.midtop = (self.damagex + self.offset, self.damagey)
-            self.state = 'Damage'
         if self.health_rect.collidepoint(current_pos[0], current_pos[1]):
             self.state = 'Health'
         if self.speed_rect.collidepoint(current_pos[0], current_pos[1]):
@@ -241,12 +246,16 @@ class LevelMenu(Menu):
             self.state = self.up_1
         if self.up_2_rect.collidepoint(current_pos[0], current_pos[1]):
             self.state = self.up_2
-        if self.exp_rect.collidepoint(current_pos[0], current_pos[1]):
-            self.state = 'Exp scale'
+        if self.up_3_rect.collidepoint(current_pos[0], current_pos[1]):
+            self.state = self.up_3
+        if self.up_4_rect.collidepoint(current_pos[0], current_pos[1]):
+            self.state = self.up_4
         if self.life_rect.collidepoint(current_pos[0], current_pos[1]):
             self.state = 'Extra Life'
         if self.kill_rect.collidepoint(current_pos[0], current_pos[1]):
             self.state = 'Clear screen'
+        if self.win_rect.collidepoint(current_pos[0], current_pos[1]):
+            self.state = 'Win game'
 
     def check_input(self):
         if pygame.MOUSEMOTION:
@@ -262,10 +271,16 @@ class LevelMenu(Menu):
                         shape.kill()
                     self.game.enemy_group.empty()
                     self.game.player.coins -= 20
+            elif self.state == 'Win game':
+                if self.game.player.coins >= 100:
+                    self.game.game_won = True
+                    self.run_display = False
+                    self.game.ready_to_spawn = False
+                    self.game.curr_menu = self.game.end_menu
+                    self.game.game_time = pygame.time.get_ticks()
+                    self.game.reset_game()
             else:
-                if self.state == 'Damage':
-                    self.game.player.add_damage()
-                elif self.state == 'Health':
+                if self.state == 'Health':
                     self.game.player.add_health()
                 elif self.state == 'Speed':
                     self.game.player.add_speed()
@@ -273,8 +288,10 @@ class LevelMenu(Menu):
                     self.game.player.upgrade_1()
                 elif self.state == self.up_2:
                     self.game.player.upgrade_2()
-                elif self.state == 'Exp scale':
-                    self.game.player.add_exp_scale()
+                elif self.state == self.up_3:
+                    self.game.player.upgrade_3()
+                elif self.state == self.up_4:
+                    self.game.player.upgrade_4()
                 self.game.player.saved_levels -= 1
                 if self.game.player.saved_levels == 0:
                     self.game.playing = True
@@ -351,7 +368,10 @@ class EndScreen(Menu):
                 self.game.curr_menu = self.game.main_menu
                 self.run_display = False
             self.game.display.fill((40, 40, 100))
-            self.game.draw_text("GAME OVER", 60, self.game_overx, self.game_overy, (255, 255, 255))
+            if self.game.game_won:
+                self.game.draw_text("YOU WIN", 60, self.game_overx, self.game_overy, (255, 255, 255))
+            else:
+                self.game.draw_text("GAME OVER", 60, self.game_overx, self.game_overy, (255, 255, 255))
             self.game.draw_text("Press space to return to main menu", 40, self.textx, self.texty, (255, 255, 255))
             self.game.draw_text(f"Level: {self.game.player.level}", 40, self.levelx, self.levely, (255, 255, 255))
             self.game.draw_text(f"Time survived: {int((self.game.game_time - self.game.start_time) / 1000)}s", 40, self.timerx, self.timery, (255, 255, 255))

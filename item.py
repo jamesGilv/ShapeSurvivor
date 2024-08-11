@@ -20,7 +20,7 @@ class Coin(Item):
         Item.__init__(self, x, y, game, "coin")
 
     def check_collision(self):
-        if pygame.Rect.colliderect(self.rect, self.game.player.rect):
+        if pygame.Rect.colliderect(self.rect, self.game.player.base_player_rect):
             self.kill()
             self.game.player.coins += 1
 
@@ -37,7 +37,7 @@ class Heart(Item):
         Item.__init__(self, x, y, game, "heart")
 
     def check_collision(self):
-        if pygame.Rect.colliderect(self.rect, self.game.player.rect):
+        if pygame.Rect.colliderect(self.rect, self.game.player.base_player_rect):
             self.kill()
             if self.game.player.health > (self.game.player.max_health - 20):
                 self.game.player.health = self.game.player.max_health

@@ -49,7 +49,7 @@ class Shape(pygame.sprite.Sprite):
     def check_alive(self):
         if self.health <= 0:
             self.alive = False
-            self.game.player.experience += self.exp * self.game.player.level_scale
+            self.game.player.experience += int(self.exp * self.game.player.level_scale)
             drop = self.get_drop()
             if drop < 40:
                 Coin(self.rect.centerx, self.rect.centery, self.game)
@@ -115,7 +115,7 @@ class Shape(pygame.sprite.Sprite):
             self.stun -= 1
         if self.on_fire:
             self.colour = (245, 139, 0)
-            self.health -= (self.game.player.damage * 0.1)
+            self.health -= int(self.game.player.damage * 0.1)
 
     def update(self):
         if self.alive:
@@ -126,5 +126,5 @@ class Shape(pygame.sprite.Sprite):
             if self.sides == 1:
                 pygame.draw.circle(self.game.display, self.colour, (self.rect.x, self.rect.y), self.radius)
             else:
-                self.game.draw_shape(self.colour, self.sides, 0, self.rect.x, self.rect.y, self.radius)
+                self.game.draw_shape(self.colour, self.sides, self.rect.x, self.rect.y, self.radius)
 
