@@ -1,6 +1,7 @@
 import pygame
 from player import Gunner, Sniper, Wizard, Crossbow
-
+import random
+from item import Magnet, Doubler, Power, Bomb
 
 class Menu():
     def __init__(self, game):
@@ -186,8 +187,10 @@ class LevelMenu(Menu):
         self.life_rect = self.text_rect(self.lifex, self.lifey, 300, 50)
         self.killx, self.killy = 1100, 400
         self.kill_rect = self.text_rect(self.killx, self.killy, 300, 50)
-        self.winx, self.winy = 1100, 500
-        self.win_rect = self.text_rect(self.winx, self.winy, 300, 50)
+        self.dropx, self.dropy = 1100, 500
+        self.drop_rect = self.text_rect(self.dropx, self.dropy, 300, 50)
+        # self.winx, self.winy = 1100, 500
+        # self.win_rect = self.text_rect(self.winx, self.winy, 300, 50)
         self.item_data = self.game.item_data
 
     def display_menu(self):
@@ -213,14 +216,16 @@ class LevelMenu(Menu):
             self.draw_item("coin", self.itemx - 40, self.itemy)
             self.draw_level("Extra Life", self.lifex, self.lifey)
             self.draw_level("Clear screen", self.killx, self.killy)
-            self.draw_level("Win game", self.winx, self.winy)
+            self.draw_level("Random drop", self.dropx, self.dropy)
             self.game.draw_text(f"{self.game.player.coins}", 40, self.itemx, self.itemy, (255, 255, 255))
             self.draw_item("heart", self.itemx - 40, self.itemy + 40)
             self.game.draw_text(f"{self.game.player.lives}", 40, self.itemx, self.itemy + 40, (255, 255, 255))
             self.game.draw_text("10", 30, self.lifex, self.lifey + 50, (255, 255, 0))
             self.game.draw_text("20", 30, self.killx, self.killy + 50, (255, 255, 0))
-            self.game.draw_text("100", 30, self.winx, self.winy + 50, (255, 255, 0))
-            self.game.draw_text("Shop", 50, 1100, 200, (255, 255, 255))
+            self.game.draw_text("40", 30, self.dropx, self.dropy + 50, (255, 255, 0))
+            self.game.draw_text("Shop", 50, 1100, 250, (255, 255, 255))
+            rect = pygame.Rect(900, 200, (self.game.DISPLAY_W-900), (self.game.DISPLAY_H-200))
+            pygame.draw.rect(self.game.display, (255, 255, 255), rect, 5)
             self.blit_screen()
 
     def draw_item(self, name, x, y):
@@ -254,8 +259,8 @@ class LevelMenu(Menu):
             self.state = 'Extra Life'
         if self.kill_rect.collidepoint(current_pos[0], current_pos[1]):
             self.state = 'Clear screen'
-        if self.win_rect.collidepoint(current_pos[0], current_pos[1]):
-            self.state = 'Win game'
+        if self.drop_rect.collidepoint(current_pos[0], current_pos[1]):
+            self.state = 'Random drop'
 
     def check_input(self):
         if pygame.MOUSEMOTION:
@@ -271,14 +276,27 @@ class LevelMenu(Menu):
                         shape.kill()
                     self.game.enemy_group.empty()
                     self.game.player.coins -= 20
-            elif self.state == 'Win game':
-                if self.game.player.coins >= 100:
-                    self.game.game_won = True
-                    self.run_display = False
-                    self.game.ready_to_spawn = False
-                    self.game.curr_menu = self.game.end_menu
-                    self.game.game_time = pygame.time.get_ticks()
-                    self.game.reset_game()
+            elif self.state == 'Random drop':
+                if self.game.player.coins >= 40:
+                    num = random.randint(0, 3)
+                    match num:
+                        case num if num == 0:
+                            Doubler(self.game.DISPLAY_W / 2, self.game.DISPLAY_H / 2, self.game)
+                        case num if num == 1:
+                            Magnet(self.game.DISPLAY_W / 2, self.game.DISPLAY_H / 2, self.game)
+                        case num if num == 2:
+                            Power(self.game.DISPLAY_W / 2, self.game.DISPLAY_H / 2, self.game)
+                        case num if num == 3:
+                            Bomb(self.game.DISPLAY_W / 2, self.game.DISPLAY_H / 2, self.game)
+                    self.game.player.coins -= 40
+            # elif self.state == 'Win game':
+            #     if self.game.player.coins >= 100:
+            #         self.game.game_won = True
+            #         self.run_display = False
+            #         self.game.ready_to_spawn = False
+            #         self.game.curr_menu = self.game.end_menu
+            #         self.game.game_time = pygame.time.get_ticks()
+            #         self.game.reset_game()
             else:
                 if self.state == 'Health':
                     self.game.player.add_health()

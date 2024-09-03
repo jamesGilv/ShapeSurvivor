@@ -1,11 +1,7 @@
-import random
-
-import pygame
 import math
 from menu import *
 from settings import *
-# from player import Player
-from shape import Shape
+from shape import Shape, Boss
 
 
 class Game():
@@ -45,12 +41,14 @@ class Game():
 
         self.shape_data = shape_data
         self.sides = [1, 3, 4]
+        self.current_colour = (255, 200, 200)
 
         self.enemy_timer = pygame.USEREVENT + 1
         self.scale_timer = pygame.USEREVENT + 2
         self.boss_timer = pygame.USEREVENT + 3
         self.ring_timer = pygame.USEREVENT + 4
         self.survive_timer = pygame.USEREVENT + 5
+        self.power_timer = pygame.USEREVENT + 6
 
         self.game_won = False
 
@@ -95,17 +93,23 @@ class Game():
                 self.curr_menu = self.level_menu
             if event.type == self.enemy_timer:
                 if self.ready_to_spawn:
-                    Shape(self, random.choice(self.sides), False)
+                    Shape(self, random.choice(self.sides))
             if event.type == self.scale_timer:
-                if self.sides[-1] < 10:
-                    self.sides.append(self.sides[-1] + 1)
+                new = self.sides[-1] + 1
+                self.sides.append(new)
+                self.shape_data[new] = {"health": 10*new, "attack_damage": 5*new, "speed": 1,
+                                        "colour": self.current_colour, "radius": 20}
+                if self.current_colour[1] > 0:
+                    self.current_colour = (self.current_colour[0], self.current_colour[1]-10, self.current_colour[2]-10)
             if event.type == self.boss_timer:
-                Shape(self, self.sides[-1], True)
+                Boss(self, self.sides[-1])
             if event.type == self.ring_timer:
                 self.spawn_ring()
             if event.type == self.survive_timer:
                 for shape in self.ring_shapes:
                     shape.kill()
+            if event.type == self.power_timer:
+                self.player.depower_player()
 
     def start_game(self):
         for bullet in self.bullet_group:
@@ -133,6 +137,7 @@ class Game():
         pygame.time.set_timer(self.scale_timer, 0)
         pygame.time.set_timer(self.boss_timer, 0)
         pygame.time.set_timer(self.ring_timer, 0)
+        self.shape_data = shape_data
 
 
     def reset_keys(self):
@@ -209,7 +214,7 @@ class Game():
 
     def spawn_ring(self):
         radius = 400
-        spawns = 32
+        spawns = 16
         self.ring_shapes = []
         time = 30000
         for i in range(spawns):
@@ -217,7 +222,7 @@ class Game():
             y = self.player.base_player_rect.centery + radius * math.sin(math.pi * 2 * i / spawns)
             if 0 < x < self.DISPLAY_W and 0 < y < self.DISPLAY_H:
                 center = pygame.math.Vector2(x, y)
-                spawn = Shape(self, self.sides[-1], False)
+                spawn = Shape(self, self.sides[-1])
                 spawn.speed = 0
                 spawn.position = center
                 self.ring_shapes.append(spawn)

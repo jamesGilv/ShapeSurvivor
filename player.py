@@ -1,5 +1,4 @@
 import pygame.time
-
 from pygame.math import Vector2
 import math
 import random
@@ -47,6 +46,7 @@ class Player(pygame.sprite.Sprite):
 
         self.coins = 0
         self.lives = 0
+        self.not_powered = True
 
     def player_turning(self):
         self.mouse_coords = pygame.mouse.get_pos()
@@ -122,6 +122,13 @@ class Player(pygame.sprite.Sprite):
         if self.level >= 25 and self.evo == 0:
             self.game.ready_to_spawn = False
             self.game.curr_menu = self.game.evo_menu
+        if self.level >= 100:
+            self.game.game_won = True
+            self.game.curr_menu.run_display = False
+            self.game.ready_to_spawn = False
+            self.game.curr_menu = self.game.end_menu
+            self.game.game_time = pygame.time.get_ticks()
+            self.game.reset_game()
 
     def check_health(self):
         if 0 >= self.health:
@@ -203,18 +210,19 @@ class Gunner(Player):
     def check_evo(self):
         if self.evo == 1:
             self.base_player_image = pygame.transform.rotozoom(self.dual_gun_img, 0, self.image_scale)
+        elif self.evo == 2:
+            self.fire_delay = 20
+            self.damage = 50
 
     def is_shooting(self):
         if self.shoot_cooldown == 0 and self.shoot:
             spawn_bullet_pos = self.vec_pos + self.gun_barrel_offset.rotate(self.angle)
             if self.evo == 0:
                 Bullet(spawn_bullet_pos[0], spawn_bullet_pos[1], self.angle, self.bullet_pierce, self.game)
-                self.shoot_cooldown = self.fire_delay
             elif self.evo == 1:
                 Bullet(spawn_bullet_pos[0], spawn_bullet_pos[1], self.angle, self.bullet_pierce, self.game)
                 spawn_2 = self.vec_pos + Vector2(20, 0) + self.gun_barrel_offset.rotate(self.angle)
                 Bullet(spawn_2[0], spawn_2[1], self.angle, self.bullet_pierce, self.game)
-                self.shoot_cooldown = self.fire_delay
             elif self.evo == 2:
                 angles = random.sample(range(1, 40), 4)
                 Bullet(spawn_bullet_pos[0], spawn_bullet_pos[1], self.angle, self.bullet_pierce, self.game)
@@ -222,7 +230,19 @@ class Gunner(Player):
                 Bullet(spawn_bullet_pos[0] - 5, spawn_bullet_pos[1], self.angle + angles[1], self.bullet_pierce, self.game)
                 Bullet(spawn_bullet_pos[0] + 10, spawn_bullet_pos[1], self.angle + angles[2], self.bullet_pierce, self.game)
                 Bullet(spawn_bullet_pos[0] - 10, spawn_bullet_pos[1], self.angle + angles[3], self.bullet_pierce, self.game)
-                self.shoot_cooldown = 30
+            self.shoot_cooldown = self.fire_delay
+
+    def power_player(self):
+        if self.not_powered:
+            pygame.time.set_timer(self.game.power_timer, 10000, 1)
+            self.damage *= 3
+            self.bullet_pierce += 3
+            self.not_powered = False
+
+    def depower_player(self):
+        self.damage /= 3
+        self.bullet_pierce -= 3
+        self.not_powered = True
 
 
 class Sniper(Player):
@@ -260,13 +280,27 @@ class Sniper(Player):
                 Grenade(spawn_bullet_pos[0], spawn_bullet_pos[1], self.angle, self.game)
             self.shoot_cooldown = self.fire_delay
 
+    def power_player(self):
+        if self.not_powered:
+            pygame.time.set_timer(self.game.power_timer, 10000, 1)
+            self.damage *= 3
+            self.bullet_pierce += 3
+            self.fire_delay /= 2
+            self.not_powered = False
+
+    def depower_player(self):
+        self.damage /= 3
+        self.bullet_pierce -= 3
+        self.fire_delay *= 2
+        self.not_powered = True
+
 class Wizard(Player):
     def __init__(self, game):
         Player.__init__(self, game, "Wizard")
         self.fire_img = self.class_info["evo1_img"].convert_alpha()
         self.ewiz_img = self.class_info["evo2_img"].convert_alpha()
         self.base_player_rect = self.base_player_rect.scale_by(0.5)
-        self.effect_damage = self.damage
+        self.effect_mult = 1
 
     def upgrade_1(self):
         self.stun += 5
@@ -278,7 +312,7 @@ class Wizard(Player):
         self.damage += 10
 
     def upgrade_4(self):
-        self.effect_damage += 10
+        self.effect_mult += 0.1
 
     def check_evo(self):
         if self.evo == 1:
@@ -297,6 +331,20 @@ class Wizard(Player):
             elif self.evo == 2:
                 Lightning(spawn_bullet_pos[0], spawn_bullet_pos[1], self.angle, self.game)
             self.shoot_cooldown = self.fire_delay
+
+    def power_player(self):
+        if self.not_powered:
+            pygame.time.set_timer(self.game.power_timer, 10000, 1)
+            self.damage *= 3
+            self.bullet_pierce += 3
+            self.fire_delay /= 2
+            self.not_powered = False
+
+    def depower_player(self):
+        self.damage /= 3
+        self.bullet_pierce -= 3
+        self.fire_delay *= 2
+        self.not_powered = True
 
 
 class Crossbow(Player):
@@ -339,3 +387,16 @@ class Crossbow(Player):
                 spawn_bullet_pos = self.vec_pos + self.gun_barrel_offset.rotate(self.angle)
                 Arrow(spawn_bullet_pos[0], spawn_bullet_pos[1], self.angle, 10, self.game)
             self.shoot_cooldown = self.fire_delay
+
+    def power_player(self):
+        if self.not_powered:
+            pygame.time.set_timer(self.game.power_timer, 10000, 1)
+            self.damage *= 3
+            self.bullet_pierce += 3
+            self.not_powered = False
+
+    def depower_player(self):
+        self.damage /= 3
+        self.bullet_pierce -= 3
+        self.not_powered = True
+

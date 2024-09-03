@@ -1,8 +1,5 @@
 import math
-
-import pygame.transform
 import random
-
 from settings import *
 
 
@@ -109,11 +106,10 @@ class Bullet(Projectile):
                 hit.position += self.knockback
 
 
-
 class Grenade(Projectile):
     def __init__(self, x, y, angle, game):
         Projectile.__init__(self, x, y, angle, 1, game)
-        self.image = pygame.image.load('Graphics/grenade.png').convert_alpha()
+        self.image = self.game.player.class_info["grenade"].convert_alpha()
         self.image = pygame.transform.rotozoom(self.image, 0, 0.5)
         self.rect = self.image.get_rect(center=(self.x, self.y))
 
@@ -129,8 +125,7 @@ class Grenade(Projectile):
 class Fire(Projectile):
     def __init__(self, x, y, angle, pierce, game):
         Projectile.__init__(self, x, y, angle, pierce, game)
-        info = self.game.player_data[self.game.player_class]
-        self.image = info["fire_img"].convert_alpha()
+        self.image = self.game.player.class_info["fire_img"].convert_alpha()
 
     def bullet_collisions(self):
         hits = pygame.sprite.groupcollide(self.game.enemy_group, self.game.bullet_group, False, False, hitbox_collide)
@@ -164,7 +159,7 @@ class Lightning(Projectile):
                 chain = True
                 pygame.draw.line(self.game.display, (0, 253, 253), current.position, closest.position, 10)
                 closest.stun += self.game.player.stun
-                closest.health -= self.game.player.damage
+                closest.health -= self.game.player.damage * self.game.player.effect_mult
                 while chain:
                     current = closest
                     new_list.remove(closest)
@@ -172,7 +167,7 @@ class Lightning(Projectile):
                     if current.position.distance_to(closest.position) < 150:
                         pygame.draw.line(self.game.display, (0, 253, 253), current.position, closest.position, 5)
                         closest.stun += self.game.player.stun
-                        closest.health -= self.game.player.damage
+                        closest.health -= self.game.player.damage * self.game.player.effect_mult
                     else:
                         chain = False
 
@@ -189,7 +184,7 @@ class Explosion(pygame.sprite.Sprite):
         self.radius = 30
         self.colour = (245, 109, 0)
         self.game = game
-        self.image = pygame.image.load('Graphics/explosion.png').convert_alpha()
+        self.image = self.game.player.class_info["exp"].convert_alpha()
         self.angle = random.randint(0, 180)
         self.image = pygame.transform.rotozoom(self.image, self.angle, 3)
         self.rect = self.image.get_rect(center=(self.x, self.y))
