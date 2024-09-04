@@ -1,7 +1,7 @@
 import math
 from menu import *
 from settings import *
-from shape import Shape, Boss
+from shape import Shape, Boss, Ring
 
 
 class Game():
@@ -93,7 +93,7 @@ class Game():
                 self.curr_menu = self.level_menu
             if event.type == self.enemy_timer:
                 if self.ready_to_spawn:
-                    Shape(self, random.choice(self.sides))
+                    Shape(self)
             if event.type == self.scale_timer:
                 new = self.sides[-1] + 1
                 self.sides.append(new)
@@ -102,7 +102,7 @@ class Game():
                 if self.current_colour[1] > 0:
                     self.current_colour = (self.current_colour[0], self.current_colour[1]-10, self.current_colour[2]-10)
             if event.type == self.boss_timer:
-                Boss(self, self.sides[-1])
+                Boss(self)
             if event.type == self.ring_timer:
                 self.spawn_ring()
             if event.type == self.survive_timer:
@@ -213,7 +213,7 @@ class Game():
             pygame.draw.rect(self.display, (255, 255, 255), (10, 15, 1260, 20), 4)
 
     def spawn_ring(self):
-        radius = 400
+        radius = 300
         spawns = 16
         self.ring_shapes = []
         time = 30000
@@ -222,8 +222,6 @@ class Game():
             y = self.player.base_player_rect.centery + radius * math.sin(math.pi * 2 * i / spawns)
             if 0 < x < self.DISPLAY_W and 0 < y < self.DISPLAY_H:
                 center = pygame.math.Vector2(x, y)
-                spawn = Shape(self, self.sides[-1])
-                spawn.speed = 0
-                spawn.position = center
+                spawn = Ring(self, center)
                 self.ring_shapes.append(spawn)
         pygame.time.set_timer(self.survive_timer, time, 1)
