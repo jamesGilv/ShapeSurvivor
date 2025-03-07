@@ -131,6 +131,22 @@ class NewMenu(Menu):
         # when returning to main menu, must reset health of options
         self.reset_health()
         self.run_display = True
+
+        # need to reset player when returning to menu
+        if self.game.player_class == 'Gunner':
+            self.game.player.kill()
+            self.game.player = Gunner(self.game)
+        elif self.game.player_class == 'Sniper':
+            self.game.player.kill()
+            self.game.player = Sniper(self.game)
+        if self.game.player_class == 'Wizard':
+            self.game.player.kill()
+            self.game.player = Wizard(self.game)
+        if self.game.player_class == 'Crossbow':
+            self.game.player.kill()
+            self.game.player = Crossbow(self.game)
+        self.game.player.reset_player()
+
         while self.run_display:
             # need to check for button presses
             self.game.check_events()
@@ -781,22 +797,34 @@ class PauseMenu(Menu):
         Menu.__init__(self, game)
         self.pausex, self.pausey = self.mid_w, self.mid_h
 
+        # must keep track of how long game is paused for to accurately display game time
+        self.time_paused = 0
+
     def display_menu(self):
         self.run_display = True
 
         # must stop new shapes from spawning when paused
         self.game.ready_to_spawn = False
+
+        # find exact time game is paused
+        self.pause_time = pygame.time.get_ticks()
+
         while self.run_display:
             # need to check for player to resume game
             self.game.check_events()
             self.check_input()
-            self.game.draw_text("Paused", 80, self.pausex, self.pausey, (255, 20, 0))
-            self.game.draw_text("Press p to resume", 60, self.pausex, self.pausey + 80, (255, 20, 0))
+            self.game.draw_text("Paused", 150, self.pausex, self.pausey, (255, 20, 0))
+            self.game.draw_text("Press p to resume", 100, self.pausex, self.pausey + 150, (255, 20, 0))
             self.blit_screen()
 
     def check_input(self):
+        # only input that matters is unpausing the game by pressing p
         if self.game.PAUSE_KEY:
-            # resume game
+            # can calculate how long game has been paused for if we know when it was paused and unpaused
+            resume_time = pygame.time.get_ticks()
+            # add to total time paused
+            self.time_paused += int((resume_time - self.pause_time) / 1000)
+
             self.game.ready_to_spawn = True
             self.run_display = False
             self.game.playing = True

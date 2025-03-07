@@ -244,14 +244,14 @@ class Game():
         pausex, pausey = 1180, 570
 
         # calculate game time in seconds
-        game_time = int((self.current_time - self.start_time) / 1000)
+        self.game_time = int((self.current_time - self.start_time) / 1000) - self.pause_menu.time_paused
 
         self.display_health_bar()
 
         # draw health, levels, time, coins, and hearts on screen
         self.draw_text(f"{self.player.health} / {self.player.max_health}", 40, healthx, healthy, self.WHITE)
         self.draw_text(f"Level: {self.player.level}", 40, levelx, levely, self.WHITE)
-        self.draw_text(f"Time: {game_time}", 40, timerx, timery, self.WHITE)
+        self.draw_text(f"Time: {self.game_time}", 40, timerx, timery, self.WHITE)
         self.display_item(coinx, coiny, "coin")
         self.display_item(heartx, hearty, "heart")
         self.draw_text(f"{self.player.coins}", 40, coinx + 40, coiny, self.WHITE)
